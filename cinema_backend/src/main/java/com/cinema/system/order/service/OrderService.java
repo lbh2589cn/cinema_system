@@ -1,0 +1,191 @@
+package com.cinema.system.order.service;
+
+import com.cinema.system.common.exception.BusinessException;
+import com.cinema.system.common.response.PageResponse;
+import com.cinema.system.order.dto.OrderCreateRequest;
+import com.cinema.system.order.dto.OrderDetailResponse;
+import com.cinema.system.order.entity.Order;
+import com.cinema.system.order.entity.OrderItem;
+import com.cinema.system.order.repository.OrderItemRepository;
+import com.cinema.system.order.repository.OrderRepository;
+import com.cinema.system.pricing.service.PricingRuleService;
+import com.cinema.system.seat.entity.SeatBooking;
+import com.cinema.system.seat.repository.SeatBookingRepository;
+import com.cinema.system.snack.entity.Snack;
+import com.cinema.system.snack.repository.SnackRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+
+@Service
+@RequiredArgsConstructor
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final SeatBookingRepository seatBookingRepository;
+    private final SnackRepository snackRepository;
+    private final PricingRuleService pricingRuleService;
+
+    private static final AtomicLong ORDER_SEQUENCE = new AtomicLong(0);
+
+    @Transactional
+    public Order createOrder(OrderCreateRequest request, Long userId) {
+        // 1. 验证座位状态并计算座位总价
+        List<SeatBooking> seatBookings = seatBookingRepository
+                .findByShowingIdAndSeatIdInWithLock(request.getShowingId(), request.getSeatBookingIds());
+
+        BigDecimal seatTotal = BigDecimal.ZERO;
+        for (SeatBooking booking : seatBookings) {
+            if (!"LOCKED".equals(booking.getStatus())) {
+                throw new BusinessException("座位 " + booking.getSeatId() + " 状态异常");
+            }
+            if (!userId.equals(booking.getLockedBy())) {
+                throw new BusinessException("座位 " + booking.getSeatId() + " 不是您锁定的");
+            }
+        }
+
+        // 2. 计算零食总价
+        BigDecimal snackTotal = BigDecimal.ZERO;
+        List<OrderItem> snackItems = new ArrayList<>();
+        if (request.getSnackItems() != null) {
+            for (OrderCreateRequest.SnackItem item : request.getSnackItems()) {
+                Snack snack = snackRepository.findById(item.getSnackId())
+                        .orElseThrow(() -> new BusinessException("零食不存在"));
+                if (snack.getStock() < item.getQuantity()) {
+                    throw new BusinessException("零食 " + snack.getName() + " 库存不足");
+                }
+                BigDecimal subtotal = snack.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                snackTotal = snackTotal.add(subtotal);
+
+                OrderItem orderItem = new OrderItem();
+                orderItem.setItemType("SNACK");
+                orderItem.setItemId(snack.getId());
+                orderItem.setItemName(snack.getName());
+                orderItem.setQuantity(item.getQuantity());
+                orderItem.setUnitPrice(snack.getPrice());
+                orderItem.setSubtotal(subtotal);
+                snackItems.add(orderItem);
+
+                snack.setStock(snack.getStock() - item.getQuantity());
+                snackRepository.save(snack);
+            }
+        }
+
+        // 3. 计算动态价格
+        BigDecimal totalAmount = seatTotal.add(snackTotal);
+        BigDecimal discountAmount = pricingRuleService.calculateDiscount(request.getShowingId(), userId, totalAmount);
+        BigDecimal finalAmount = totalAmount.subtract(discountAmount);
+
+        // 4. 创建订单
+        Order order = new Order();
+        order.setOrderNo(generateOrderNo());
+        order.setUserId(userId);
+        order.setShowingId(request.getShowingId());
+        order.setSeatCount(seatBookings.size());
+        order.setTotalAmount(totalAmount);
+        order.setDiscountAmount(discountAmount);
+        order.setFinalAmount(finalAmount);
+        order.setStatus("PENDING");
+        order = orderRepository.save(order);
+
+        // 5. 更新座位状态
+        for (SeatBooking booking : seatBookings) {
+            booking.setStatus("BOOKED");
+            booking.setBookedBy(userId);
+            booking.setBookedAt(LocalDateTime.now());
+            booking.setOrderId(order.getId());
+        }
+        seatBookingRepository.saveAll(seatBookings);
+
+        // 6. 创建订单明细
+        for (SeatBooking booking : seatBookings) {
+            OrderItem item = new OrderItem();
+            item.setOrderId(order.getId());
+            item.setItemType("SEAT");
+            item.setItemId(booking.getId());
+            item.setItemName("座位 #" + booking.getSeatId());
+            item.setQuantity(1);
+            item.setUnitPrice(BigDecimal.ZERO);
+            item.setSubtotal(BigDecimal.ZERO);
+            orderItemRepository.save(item);
+        }
+        for (OrderItem snackItem : snackItems) {
+            snackItem.setOrderId(order.getId());
+            orderItemRepository.save(snackItem);
+        }
+
+        return order;
+    }
+
+    public PageResponse<Order> listOrders(Long userId, int page, int size) {
+        Page<Order> orderPage = orderRepository.findByUserIdOrderByCreatedAtDesc(userId,
+                PageRequest.of(page, size));
+        return PageResponse.of(orderPage.getContent(), page, size, orderPage.getTotalElements());
+    }
+
+    public OrderDetailResponse getOrderDetail(Long id, Long userId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("订单不存在"));
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("无权查看该订单");
+        }
+        List<OrderItem> items = orderItemRepository.findByOrderId(id);
+
+        OrderDetailResponse response = new OrderDetailResponse();
+        response.setId(order.getId());
+        response.setOrderNo(order.getOrderNo());
+        response.setUserId(order.getUserId());
+        response.setShowingId(order.getShowingId());
+        response.setSeatCount(order.getSeatCount());
+        response.setTotalAmount(order.getTotalAmount());
+        response.setDiscountAmount(order.getDiscountAmount());
+        response.setFinalAmount(order.getFinalAmount());
+        response.setStatus(order.getStatus());
+        response.setRemark(order.getRemark());
+        response.setCreatedAt(order.getCreatedAt());
+        response.setItems(items);
+        return response;
+    }
+
+    @Transactional
+    public void refundOrder(Long id, Long userId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("订单不存在"));
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("无权退票");
+        }
+        if (!"PAID".equals(order.getStatus())) {
+            throw new BusinessException("只有已支付的订单才能退票");
+        }
+
+        order.setStatus("REFUNDED");
+        orderRepository.save(order);
+
+        // 释放座位
+        List<SeatBooking> bookings = seatBookingRepository.findByOrderId(id);
+        for (SeatBooking booking : bookings) {
+            booking.setStatus("AVAILABLE");
+            booking.setLockedBy(null);
+            booking.setLockedAt(null);
+            booking.setBookedBy(null);
+            booking.setBookedAt(null);
+            booking.setOrderId(null);
+        }
+        seatBookingRepository.saveAll(bookings);
+    }
+
+    private synchronized String generateOrderNo() {
+        String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        long seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
+        return datePart + String.format("%08d", seq);
+    }
+}

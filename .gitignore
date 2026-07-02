@@ -1,0 +1,54 @@
+# =============================================================
+# 电影院购票系统 - Git 忽略规则
+# =============================================================
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# === IDE ===
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# === Environment ===
+.env
+.env.local
+.env.*.local
+*.env
+
+# === Logs ===
+*.log
+logs/
+
+# === Backend (Java / Maven) ===
+cinema_backend/target/
+cinema_backend/*.class
+cinema_backend/*.jar
+cinema_backend/*.war
+cinema_backend/.mvn/
+!cinema_backend/.mvn/wrapper/maven-wrapper.jar
+
+# === Frontend (Node.js / Vite) ===
+cinema_web/node_modules/
+cinema_web/dist/
+cinema_web/dist-ssr/
+cinema_web/*.local
+
+
+# === Docker ===
+cinema_backend/Dockerfile
+cinema_web/Dockerfile
+
+# === Test reports ===
+**/test-output/
+**/reports/
+**/coverage/
