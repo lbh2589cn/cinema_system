@@ -10,18 +10,20 @@ import org.springframework.stereotype.Repository;
 import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface SeatBookingRepository extends JpaRepository<SeatBooking, Long> {
-    List<SeatBooking> findByShowingId(Long showingId);
+    @Query("SELECT sb FROM SeatBooking sb WHERE sb.showingId = :showingId ORDER BY sb.seatId ASC")
+    List<SeatBooking> findByShowingId(@Param("showingId") Long showingId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT s FROM SeatBooking s WHERE s.showingId = :showingId AND s.seatId IN :seatIds")
-    List<SeatBooking> findByShowingIdAndSeatIdInWithLock(@Param("showingId") Long showingId,
-                                                          @Param("seatIds") List<Long> seatIds);
+    @Query("SELECT s FROM SeatBooking s WHERE s.id IN :ids")
+    List<SeatBooking> findByIdsWithLock(@Param("ids") List<Long> ids);
 
-    List<SeatBooking> findByShowingIdAndSeatIdIn(Long showingId, List<Long> seatIds);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM SeatBooking s WHERE s.showingId = :showingId AND s.id IN :ids")
+    List<SeatBooking> findByShowingIdAndIdInWithLock(@Param("showingId") Long showingId,
+                                                      @Param("ids") List<Long> ids);
 
     @Query("SELECT s FROM SeatBooking s WHERE s.status = 'LOCKED' AND s.lockedAt < :expireTime")
     List<SeatBooking> findExpiredLocks(@Param("expireTime") LocalDateTime expireTime);

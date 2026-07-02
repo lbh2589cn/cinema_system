@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,13 +27,13 @@ public class User {
     @Column(length = 50)
     private String nickname;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 10)
     private String role;
 
     @Column(name = "is_member", nullable = false)
     private Boolean isMember;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 10)
     private String status;
 
     @Column(name = "created_at", updatable = false)

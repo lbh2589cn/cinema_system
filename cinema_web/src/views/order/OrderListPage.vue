@@ -5,24 +5,27 @@
                 <span class="card-title">我的订单</span>
             </template>
             <el-table :data="orders" v-loading="loading" style="width: 100%" @row-click="goToDetail">
-                <el-table-column prop="orderNo" label="订单号" width="200" />
-                <el-table-column prop="seatCount" label="座位数" width="80" />
-                <el-table-column prop="totalAmount" label="总价" width="100">
+                <el-table-column prop="orderNo" label="订单号" min-width="150" align="center" />
+                <el-table-column prop="seatCount" label="座位数" width="80" align="center" />
+                <el-table-column prop="totalAmount" label="总价" width="90" align="center">
                     <template #default="{ row }">¥{{ row.totalAmount.toFixed(2) }}</template>
                 </el-table-column>
-                <el-table-column prop="finalAmount" label="实付" width="100">
+                <el-table-column prop="finalAmount" label="实付" width="90" align="center">
                     <template #default="{ row }">¥{{ row.finalAmount.toFixed(2) }}</template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态" width="120">
+                <el-table-column prop="status" label="状态" width="100" align="center">
                     <template #default="{ row }">
                         <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="createdAt" label="创建时间" width="180" />
-                <el-table-column label="操作" width="120">
+                <el-table-column prop="createdAt" label="创建时间" min-width="150" align="center" />
+                <el-table-column label="操作" min-width="160" align="center">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click.stop="goToDetail(row)">详情</el-button>
-                        <el-button v-if="row.status === 'PAID'" text type="danger" @click.stop="handleRefund(row)">退票</el-button>
+                        <div class="action-btns">
+                            <el-button text type="primary" @click.stop="goToDetail(row)">详情</el-button>
+                            <el-button v-if="row.status === 'PAID'" text type="danger" @click.stop="handleRefund(row)">退票</el-button>
+                            <el-button text type="danger" @click.stop="handleDelete(row)">删除</el-button>
+                        </div>
                     </template>
                 </el-table-column>
             </el-table>
@@ -43,7 +46,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { getOrdersApi, refundOrderApi } from '@/api/order'
+import { getOrdersApi, refundOrderApi, deleteOrderApi } from '@/api/order'
 import type { Order } from '@/api/order'
 
 const router = useRouter()
@@ -78,6 +81,17 @@ async function handleRefund(order: Order) {
     }
 }
 
+async function handleDelete(order: Order) {
+    try {
+        await ElMessageBox.confirm('确定要删除此订单吗？删除后不可恢复。', '确定删除', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await deleteOrderApi(order.id)
+        ElMessage.success('订单已删除')
+        await loadOrders()
+    } catch {
+        // cancelled or error
+    }
+}
+
 async function loadOrders() {
     loading.value = true
     try {
@@ -96,6 +110,13 @@ onMounted(loadOrders)
 .card-title {
     font-size: 16px;
     font-weight: 600;
+}
+
+.action-btns {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 .pagination {

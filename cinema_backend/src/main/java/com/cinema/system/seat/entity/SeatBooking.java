@@ -37,9 +37,7 @@ public class SeatBooking {
     @Column(name = "order_id")
     private Long orderId;
 
-    @Column(nullable = false)
-    private Integer version;
-
     @Version
-    private Integer jpaVersion;
+    @Column(name = "version", nullable = false)
+    private Integer version;
 }

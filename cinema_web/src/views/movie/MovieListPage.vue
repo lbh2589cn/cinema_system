@@ -39,7 +39,7 @@ import type { Movie } from '@/api/movie'
 const movies = ref<Movie[]>([])
 const keyword = ref('')
 const genre = ref('')
-const page = ref(0)
+const page = ref(1)
 const size = ref(20)
 const total = ref(0)
 const loading = ref(false)
@@ -51,7 +51,7 @@ async function loadMovies() {
             keyword: keyword.value || undefined,
             genre: genre.value || undefined,
             status: 'ON',
-            page: page.value,
+            page: page.value - 1,
             size: size.value,
         })
         movies.value = result.content
@@ -62,7 +62,7 @@ async function loadMovies() {
 }
 
 function search() {
-    page.value = 0
+    page.value = 1
     loadMovies()
 }
 

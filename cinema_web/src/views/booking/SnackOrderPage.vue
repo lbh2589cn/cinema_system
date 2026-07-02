@@ -2,7 +2,10 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">选购零食</span>
+                <div class="flex-between">
+                    <span class="card-title">选购零食</span>
+                    <el-button text @click="goBack">返回</el-button>
+                </div>
             </template>
             <div class="snack-grid" v-loading="loading">
                 <el-card v-for="snack in snacks" :key="snack.id" class="snack-card" shadow="hover">
@@ -27,12 +30,12 @@
                     </div>
                 </el-card>
             </div>
-            <div class="actions" v-if="hasSelection">
+            <div class="actions">
                 <span class="selected-total">
                     已选 {{ totalQuantity }} 件，合计 ¥{{ totalPrice.toFixed(2) }}
                 </span>
                 <el-button type="primary" size="large" @click="goToConfirm">
-                    去结算
+                    {{ hasSelection ? '去结算' : '跳过选购' }}
                 </el-button>
             </div>
         </el-card>
@@ -41,11 +44,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getSnacksApi } from '@/api/snack'
 import { useAppStore } from '@/stores/app'
 import type { Snack } from '@/api/snack'
 
+const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 
@@ -67,7 +71,15 @@ function goToConfirm() {
         .filter(s => (quantities.value[s.id] || 0) > 0)
         .map(s => ({ ...s, quantity: quantities.value[s.id] }))
     appStore.setSelectedSnacks(selected)
-    router.push('/order/confirm')
+    const movieId = route.query.movieId || appStore.currentMovieId
+    const showingId = route.query.showingId || appStore.currentShowingId
+    router.push(`/order/confirm?movieId=${movieId}&showingId=${showingId}`)
+}
+
+function goBack() {
+    const movieId = route.query.movieId || appStore.currentMovieId
+    const showingId = route.query.showingId || appStore.currentShowingId
+    router.push(`/seats?movieId=${movieId}&showingId=${showingId}`)
 }
 
 onMounted(async () => {

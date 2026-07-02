@@ -11,11 +11,12 @@ import java.util.List;
 
 @Repository
 public interface ShowingRepository extends JpaRepository<Showing, Long> {
-    List<Showing> findByMovieIdAndShowDate(Long movieId, LocalDate showDate);
+    List<Showing> findByMovieIdAndShowDateOrderByShowTimeAsc(Long movieId, LocalDate showDate);
 
     @Query("SELECT s FROM Showing s WHERE " +
            "(:movieId IS NULL OR s.movieId = :movieId) AND " +
-           "(:date IS NULL OR s.showDate = :date)")
+           "(:date IS NULL OR s.showDate = :date) " +
+           "ORDER BY s.showDate ASC, s.showTime ASC")
     List<Showing> findShowings(@Param("movieId") Long movieId,
                                @Param("date") LocalDate date);
 

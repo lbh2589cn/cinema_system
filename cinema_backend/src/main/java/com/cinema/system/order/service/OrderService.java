@@ -2,6 +2,8 @@ package com.cinema.system.order.service;
 
 import com.cinema.system.common.exception.BusinessException;
 import com.cinema.system.common.response.PageResponse;
+import com.cinema.system.hall.entity.HallSeat;
+import com.cinema.system.hall.repository.HallSeatRepository;
 import com.cinema.system.order.dto.OrderCreateRequest;
 import com.cinema.system.order.dto.OrderDetailResponse;
 import com.cinema.system.order.entity.Order;
@@ -11,6 +13,8 @@ import com.cinema.system.order.repository.OrderRepository;
 import com.cinema.system.pricing.service.PricingRuleService;
 import com.cinema.system.seat.entity.SeatBooking;
 import com.cinema.system.seat.repository.SeatBookingRepository;
+import com.cinema.system.showing.entity.Showing;
+import com.cinema.system.showing.repository.ShowingRepository;
 import com.cinema.system.snack.entity.Snack;
 import com.cinema.system.snack.repository.SnackRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +28,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +38,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final SeatBookingRepository seatBookingRepository;
+    private final HallSeatRepository hallSeatRepository;
+    private final ShowingRepository showingRepository;
     private final SnackRepository snackRepository;
     private final PricingRuleService pricingRuleService;
 
@@ -41,9 +49,8 @@ public class OrderService {
     public Order createOrder(OrderCreateRequest request, Long userId) {
         // 1. 验证座位状态并计算座位总价
         List<SeatBooking> seatBookings = seatBookingRepository
-                .findByShowingIdAndSeatIdInWithLock(request.getShowingId(), request.getSeatBookingIds());
+                .findByIdsWithLock(request.getSeatBookingIds());
 
-        BigDecimal seatTotal = BigDecimal.ZERO;
         for (SeatBooking booking : seatBookings) {
             if (!"LOCKED".equals(booking.getStatus())) {
                 throw new BusinessException("座位 " + booking.getSeatId() + " 状态异常");
@@ -52,6 +59,9 @@ public class OrderService {
                 throw new BusinessException("座位 " + booking.getSeatId() + " 不是您锁定的");
             }
         }
+        Showing showing = showingRepository.findById(request.getShowingId())
+                .orElseThrow(() -> new BusinessException("排片不存在"));
+        BigDecimal seatTotal = showing.getBasePrice().multiply(BigDecimal.valueOf(seatBookings.size()));
 
         // 2. 计算零食总价
         BigDecimal snackTotal = BigDecimal.ZERO;
@@ -107,15 +117,25 @@ public class OrderService {
         seatBookingRepository.saveAll(seatBookings);
 
         // 6. 创建订单明细
-        for (SeatBooking booking : seatBookings) {
+        BigDecimal seatPrice = showing.getBasePrice();
+        List<Long> hallSeatIds = seatBookings.stream()
+                .map(SeatBooking::getSeatId)
+                .collect(Collectors.toList());
+        Map<Long, HallSeat> hallSeatMap = hallSeatRepository.findAllById(hallSeatIds).stream()
+                .collect(Collectors.toMap(HallSeat::getId, h -> h));
+        for (SeatBooking seatItem : seatBookings) {
             OrderItem item = new OrderItem();
             item.setOrderId(order.getId());
             item.setItemType("SEAT");
-            item.setItemId(booking.getId());
-            item.setItemName("座位 #" + booking.getSeatId());
+            item.setItemId(seatItem.getId());
+            HallSeat hallSeat = hallSeatMap.get(seatItem.getSeatId());
+            String seatName = hallSeat != null ? 
+                    "座位 第" + hallSeat.getRowNum() + "排第" + hallSeat.getColNum() + "座" : 
+                    "座位 #" + seatItem.getSeatId();
+            item.setItemName(seatName);
             item.setQuantity(1);
-            item.setUnitPrice(BigDecimal.ZERO);
-            item.setSubtotal(BigDecimal.ZERO);
+            item.setUnitPrice(seatPrice);
+            item.setSubtotal(seatPrice);
             orderItemRepository.save(item);
         }
         for (OrderItem snackItem : snackItems) {
@@ -127,7 +147,7 @@ public class OrderService {
     }
 
     public PageResponse<Order> listOrders(Long userId, int page, int size) {
-        Page<Order> orderPage = orderRepository.findByUserIdOrderByCreatedAtDesc(userId,
+        Page<Order> orderPage = orderRepository.findByUserIdAndVisible(userId,
                 PageRequest.of(page, size));
         return PageResponse.of(orderPage.getContent(), page, size, orderPage.getTotalElements());
     }
@@ -183,9 +203,27 @@ public class OrderService {
         seatBookingRepository.saveAll(bookings);
     }
 
+    @Transactional
+    public void deleteOrder(Long id, Long userId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("订单不存在"));
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("无权删除该订单");
+        }
+
+        order.setVisible(false);
+        orderRepository.save(order);
+    }
+
     private synchronized String generateOrderNo() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        long seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
-        return datePart + String.format("%08d", seq);
+        for (int i = 0; i < 100000000; i++) {
+            long seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
+            String orderNo = datePart + String.format("%08d", seq);
+            if (orderRepository.findByOrderNo(orderNo).isEmpty()) {
+                return orderNo;
+            }
+        }
+        throw new BusinessException("订单号生成失败，请稍后重试");
     }
 }

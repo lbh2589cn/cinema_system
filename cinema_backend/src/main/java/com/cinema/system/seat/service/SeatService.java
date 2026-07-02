@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,13 +47,15 @@ public class SeatService {
                         hallSeat.getSeatType(), booking.getStatus()));
             }
         }
+        result.sort(Comparator.comparing(SeatStatusResponse::getRowNum)
+                .thenComparing(SeatStatusResponse::getColNum));
         return result;
     }
 
     @Transactional
     public void lockSeats(LockSeatRequest request, Long userId) {
         List<SeatBooking> bookings = seatBookingRepository
-                .findByShowingIdAndSeatIdInWithLock(request.getShowingId(), request.getSeatIds());
+                .findByShowingIdAndIdInWithLock(request.getShowingId(), request.getSeatIds());
 
         for (SeatBooking booking : bookings) {
             if (!"AVAILABLE".equals(booking.getStatus())) {
@@ -68,7 +71,7 @@ public class SeatService {
     @Transactional
     public void unlockSeats(Long showingId, List<Long> seatBookingIds, Long userId) {
         List<SeatBooking> bookings = seatBookingRepository
-                .findByShowingIdAndSeatIdInWithLock(showingId, seatBookingIds);
+                .findByShowingIdAndIdInWithLock(showingId, seatBookingIds);
 
         for (SeatBooking booking : bookings) {
             if (!"LOCKED".equals(booking.getStatus())) {

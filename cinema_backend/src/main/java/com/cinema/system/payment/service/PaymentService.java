@@ -52,7 +52,13 @@ public class PaymentService {
 
     private synchronized String generatePaymentNo() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        long seq = PAYMENT_SEQUENCE.incrementAndGet() % 100000000;
-        return "PAY" + datePart + String.format("%08d", seq);
+        for (int i = 0; i < 100000000; i++) {
+            long seq = PAYMENT_SEQUENCE.incrementAndGet() % 100000000;
+            String paymentNo = "PAY" + datePart + String.format("%08d", seq);
+            if (paymentRepository.findByPaymentNo(paymentNo).isEmpty()) {
+                return paymentNo;
+            }
+        }
+        throw new BusinessException("支付编号生成失败，请稍后重试");
     }
 }

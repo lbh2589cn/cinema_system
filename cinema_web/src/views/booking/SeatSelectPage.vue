@@ -20,7 +20,7 @@
             <div class="actions" v-if="selectedIds.size > 0">
                 <div class="selected-info">已选 {{ selectedIds.size }} 个座位</div>
                 <el-button type="primary" size="large" @click="handleNext" :loading="locking">
-                    确认选座，去选购零食
+                    去选购零食
                 </el-button>
             </div>
         </el-card>
@@ -54,7 +54,8 @@ const maxCols = computed(() => {
 })
 
 function goBack() {
-    router.back()
+    const movieId = route.query.movieId || appStore.currentMovieId
+    router.push(`/showings?movieId=${movieId}`)
 }
 
 function toggleSeat(seat: SeatStatus) {
@@ -69,6 +70,7 @@ async function handleNext() {
     locking.value = true
     try {
         const showingId = Number(route.query.showingId)
+        const movieId = route.query.movieId
         await lockSeatsApi({
             showingId,
             seatIds: Array.from(selectedIds.value),
@@ -76,7 +78,7 @@ async function handleNext() {
         appStore.setSelectedSeats(
             seats.value.filter(s => selectedIds.value.has(s.id))
         )
-        router.push('/snacks')
+        router.push(`/snacks?movieId=${movieId}&showingId=${showingId}`)
     } catch {
         ElMessage.error('锁定座位失败，请重试')
     } finally {

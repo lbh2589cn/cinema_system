@@ -50,3 +50,7 @@ export function getOrderApi(id: number): Promise<OrderDetail> {
 export function refundOrderApi(id: number): Promise<void> {
     return request.post(`/api/orders/${id}/refund`)
 }
+
+export function deleteOrderApi(id: number): Promise<void> {
+    return request.delete(`/api/orders/${id}`)
+}

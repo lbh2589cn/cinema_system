@@ -46,4 +46,11 @@ public class OrderController {
         orderService.refundOrder(id, userId);
         return ApiResponse.success("退票成功", null);
     }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> deleteOrder(@PathVariable Long id, Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        orderService.deleteOrder(id, userId);
+        return ApiResponse.success("订单已删除", null);
+    }
 }

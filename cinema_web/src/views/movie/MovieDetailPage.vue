@@ -1,5 +1,10 @@
 <template>
     <div class="page-container" v-loading="loading">
+        <div class="page-header">
+            <el-button text @click="goBack">
+                <el-icon><ArrowLeft /></el-icon> 返回
+            </el-button>
+        </div>
         <div class="movie-detail" v-if="movie">
             <div class="movie-poster">
                 <el-image :src="posterSrc" fit="cover">
@@ -25,17 +30,6 @@
                         选择场次购票
                     </el-button>
                 </div>
-
-                <div class="showings-section" v-if="showings.length > 0">
-                    <h3>放映场次</h3>
-                    <div class="showings-list">
-                        <el-card v-for="showing in showings" :key="showing.id" class="showing-card" shadow="hover" @click="selectShowing(showing)">
-                            <div class="showing-date">{{ formatDate(showing.showDate) }}</div>
-                            <div class="showing-time">{{ showing.showTime }}</div>
-                            <div class="showing-price">¥{{ showing.basePrice }}</div>
-                        </el-card>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -45,33 +39,26 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getMovieApi } from '@/api/movie'
-import { getShowingsApi } from '@/api/showing'
 import { useAppStore } from '@/stores/app'
 import type { Movie } from '@/api/movie'
-import type { Showing } from '@/api/showing'
 
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const movie = ref<Movie | null>(null)
-const showings = ref<Showing[]>([])
 const loading = ref(false)
 
 const posterSrc = computed(() => movie.value?.posterUrl || '')
 
-function formatDate(dateStr: string) {
-    const d = new Date(dateStr)
-    return `${d.getMonth() + 1}/${d.getDate()}`
+function goBack() {
+    router.push('/movies')
 }
 
 function goToBooking() {
+    if (movie.value?.id) {
+        appStore.setCurrentMovie(movie.value.id)
+    }
     router.push(`/showings?movieId=${movie.value?.id}`)
-}
-
-function selectShowing(showing: Showing) {
-    appStore.setCurrentMovie(movie.value!.id)
-    appStore.setCurrentShowing(showing.id)
-    router.push(`/seats?showingId=${showing.id}`)
 }
 
 onMounted(async () => {
@@ -79,7 +66,6 @@ onMounted(async () => {
     try {
         const id = Number(route.params.id)
         movie.value = await getMovieApi(id)
-        showings.value = await getShowingsApi({ movieId: id })
     } finally {
         loading.value = false
     }
@@ -144,43 +130,11 @@ onMounted(async () => {
     }
 
     .actions {
-        margin-bottom: 32px;
+        margin-top: 24px;
     }
 }
 
-.showings-section {
-    h3 {
-        font-size: 18px;
-        margin-bottom: 16px;
-    }
-
-    .showings-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 12px;
-    }
-
-    .showing-card {
-        cursor: pointer;
-        text-align: center;
-        padding: 8px;
-
-        .showing-date {
-            font-size: 13px;
-            color: #909399;
-        }
-
-        .showing-time {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 8px 0;
-            color: #409eff;
-        }
-
-        .showing-price {
-            font-size: 16px;
-            color: #f56c6c;
-        }
-    }
+.page-header {
+    margin-bottom: 16px;
 }
 </style>

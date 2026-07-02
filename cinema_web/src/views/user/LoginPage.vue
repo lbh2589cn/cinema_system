@@ -4,7 +4,7 @@
             <h2 class="title">登录</h2>
             <el-form :model="loginForm" :rules="rules" ref="formRef" label-width="0" @keyup.enter="handleLogin">
                 <el-form-item prop="userId">
-                    <el-input v-model="loginForm.userId" placeholder="请输入账号" size="large" prefix-icon="User" />
+                    <el-input v-model="loginForm.userId" placeholder="请输入用户ID" size="large" prefix-icon="User" />
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" size="large" prefix-icon="Lock" show-password />
@@ -40,7 +40,7 @@ const loginForm = reactive({
 })
 
 const rules = {
-    userId: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+    userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
     password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 

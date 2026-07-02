@@ -46,6 +46,9 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private Boolean visible = true;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

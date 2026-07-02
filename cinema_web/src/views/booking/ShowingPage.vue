@@ -2,10 +2,13 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">选择场次</span>
+                <div class="flex-between">
+                    <span class="card-title">选择场次</span>
+                    <el-button text @click="goBack">返回</el-button>
+                </div>
             </template>
             <div class="date-selector">
-                <el-radio-group v-model="selectedDate" @change="loadShowings">
+                <el-radio-group v-model="selectedDate">
                     <el-radio-button v-for="d in dateOptions" :key="d.value" :value="d.value">
                         {{ d.label }}
                     </el-radio-button>
@@ -25,7 +28,6 @@
                         <span>影厅 #{{ showing.hallId }}</span>
                         <span class="price">¥{{ showing.basePrice }}</span>
                     </div>
-                    <el-button type="primary" size="small">选座购票</el-button>
                 </el-card>
             </div>
         </el-card>
@@ -43,42 +45,58 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 
-const showings = ref<Showing[]>([])
+const allShowings = ref<Showing[]>([])
 const loading = ref(false)
 const selectedDate = ref('')
 
 const dateOptions = computed(() => {
-    const options = []
-    for (let i = 0; i < 7; i++) {
-        const d = new Date()
-        d.setDate(d.getDate() + i)
-        const value = d.toISOString().split('T')[0]
-        const label = i === 0 ? '今天' : i === 1 ? '明天' : `${d.getMonth() + 1}/${d.getDate()}`
-        options.push({ value, label })
-    }
-    return options
+    const uniqueDates = new Set(allShowings.value.map(s => s.showDate))
+    const sorted = Array.from(uniqueDates).sort()
+    return sorted.slice(0, 7).map((value, i) => ({
+        value,
+        label: formatDateLabel(value, i),
+    }))
 })
 
-async function loadShowings() {
-    loading.value = true
-    try {
-        showings.value = await getShowingsApi({
-            movieId: Number(route.query.movieId) || undefined,
-            date: selectedDate.value || undefined,
-        })
-    } finally {
-        loading.value = false
-    }
+function formatDateLabel(dateStr: string, index: number) {
+    const today = new Date().toISOString().split('T')[0]
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+    if (dateStr === today) return '今天'
+    if (dateStr === tomorrow) return '明天'
+    const d = new Date(dateStr)
+    return `${d.getMonth() + 1}/${d.getDate()}`
 }
+
+const showings = computed(() =>
+    allShowings.value.filter(s => s.showDate === selectedDate.value)
+)
 
 function selectShowing(showing: Showing) {
     appStore.setCurrentShowing(showing.id)
-    router.push(`/seats?showingId=${showing.id}`)
+    const movieId = route.query.movieId
+    router.push(`/seats?movieId=${movieId}&showingId=${showing.id}`)
 }
 
-onMounted(() => {
-    selectedDate.value = dateOptions.value[0].value
-    loadShowings()
+function goBack() {
+    const movieId = route.query.movieId || appStore.currentMovieId
+    if (movieId) {
+        router.push(`/movies/${movieId}`)
+    } else {
+        router.push('/movies')
+    }
+}
+
+onMounted(async () => {
+    loading.value = true
+    try {
+        const movieId = Number(route.query.movieId) || undefined
+        allShowings.value = await getShowingsApi({ movieId })
+        if (dateOptions.value.length > 0) {
+            selectedDate.value = dateOptions.value[0].value
+        }
+    } finally {
+        loading.value = false
+    }
 })
 </script>
 
