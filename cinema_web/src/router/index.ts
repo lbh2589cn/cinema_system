@@ -88,49 +88,49 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/user/ProfilePage.vue'),
                 meta: { requiresAuth: true },
             },
-            // Admin routes
+        ],
+    },
+    // Admin routes
+    {
+        path: '/admin',
+        component: () => import('@/views/admin/AdminLayoutPage.vue'),
+        redirect: '/admin/dashboard',
+        meta: { requiresAuth: true, role: 'ADMIN' },
+        children: [
             {
-                path: 'admin',
-                component: () => import('@/views/admin/AdminLayoutPage.vue'),
-                redirect: '/admin/dashboard',
-                meta: { requiresAuth: true, role: 'ADMIN' },
-                children: [
-                    {
-                        path: 'dashboard',
-                        name: 'Dashboard',
-                        component: () => import('@/views/admin/DashboardPage.vue'),
-                    },
-                    {
-                        path: 'movies',
-                        name: 'MovieManage',
-                        component: () => import('@/views/admin/MovieManagePage.vue'),
-                    },
-                    {
-                        path: 'showings',
-                        name: 'ShowingManage',
-                        component: () => import('@/views/admin/ShowingManagePage.vue'),
-                    },
-                    {
-                        path: 'halls',
-                        name: 'HallManage',
-                        component: () => import('@/views/admin/HallManagePage.vue'),
-                    },
-                    {
-                        path: 'users',
-                        name: 'UserManage',
-                        component: () => import('@/views/admin/UserManagePage.vue'),
-                    },
-                    {
-                        path: 'pricing',
-                        name: 'PricingRule',
-                        component: () => import('@/views/admin/PricingRulePage.vue'),
-                    },
-                    {
-                        path: 'orders',
-                        name: 'OrderManage',
-                        component: () => import('@/views/admin/OrderManagePage.vue'),
-                    },
-                ],
+                path: 'dashboard',
+                name: 'Dashboard',
+                component: () => import('@/views/admin/DashboardPage.vue'),
+            },
+            {
+                path: 'movies',
+                name: 'MovieManage',
+                component: () => import('@/views/admin/MovieManagePage.vue'),
+            },
+            {
+                path: 'showings',
+                name: 'ShowingManage',
+                component: () => import('@/views/admin/ShowingManagePage.vue'),
+            },
+            {
+                path: 'halls',
+                name: 'HallManage',
+                component: () => import('@/views/admin/HallManagePage.vue'),
+            },
+            {
+                path: 'users',
+                name: 'UserManage',
+                component: () => import('@/views/admin/UserManagePage.vue'),
+            },
+            {
+                path: 'pricing',
+                name: 'PricingRule',
+                component: () => import('@/views/admin/PricingRulePage.vue'),
+            },
+            {
+                path: 'orders',
+                name: 'OrderManage',
+                component: () => import('@/views/admin/OrderManagePage.vue'),
             },
         ],
     },

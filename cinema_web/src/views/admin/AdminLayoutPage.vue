@@ -62,7 +62,6 @@ const appStore = useAppStore()
 .admin-body {
     display: flex;
     flex: 1;
-    padding-top: 60px;
 }
 
 .admin-sidebar {

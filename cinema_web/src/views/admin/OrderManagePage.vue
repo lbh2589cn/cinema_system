@@ -19,9 +19,10 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="createdAt" label="创建时间" width="180" />
-                <el-table-column label="操作" width="120">
+                <el-table-column label="操作" width="180">
                     <template #default="{ row }">
                         <el-button text type="primary" @click="viewDetail(row)">详情</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -35,7 +36,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getOrdersApi } from '@/api/order'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getAdminOrdersApi, hardDeleteOrderApi } from '@/api/admin'
 import type { Order } from '@/api/order'
 
 const router = useRouter()
@@ -59,10 +61,25 @@ function viewDetail(order: Order) {
     router.push(`/orders/${order.id}`)
 }
 
+async function handleDelete(order: Order) {
+    try {
+        await ElMessageBox.confirm(`确认永久删除订单 ${order.orderNo}？此操作将同时删除关联的支付记录，且不可恢复。`, '确认删除', {
+            confirmButtonText: '确认删除',
+            cancelButtonText: '取消',
+            type: 'warning',
+        })
+        await hardDeleteOrderApi(order.id)
+        ElMessage.success('订单已永久删除')
+        await loadOrders()
+    } catch {
+        // cancelled or error
+    }
+}
+
 async function loadOrders() {
     loading.value = true
     try {
-        const result = await getOrdersApi({ page: page.value - 1, size: size.value })
+        const result = await getAdminOrdersApi({ page: page.value - 1, size: size.value })
         orders.value = result.content
         total.value = result.total
     } finally {

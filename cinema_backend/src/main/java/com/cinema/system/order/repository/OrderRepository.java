@@ -14,7 +14,12 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByOrderNo(String orderNo);
+
     @Query("SELECT o FROM Order o WHERE o.userId = :userId AND o.visible = true ORDER BY o.createdAt DESC")
-    Page<Order> findByUserIdAndVisible(@Param("userId") Long userId, Pageable pageable);
+    Page<Order> findVisibleByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT o FROM Order o ORDER BY o.createdAt DESC")
+    Page<Order> findAllOrderByCreatedAtDesc(Pageable pageable);
+
     List<Order> findByUserId(Long userId);
 }

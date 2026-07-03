@@ -18,3 +18,11 @@ export function getAdminUsersApi(params?: { page?: number; size?: number }): Pro
 export function updateAdminUserApi(id: number, data: { isMember?: boolean; status?: string }): Promise<void> {
     return request.put(`/api/admin/users/${id}`, data)
 }
+
+export function getAdminOrdersApi(params?: { page?: number; size?: number }): Promise<{ content: any[]; total: number }> {
+    return request.get('/api/admin/orders', { params })
+}
+
+export function hardDeleteOrderApi(id: number): Promise<void> {
+    return request.delete(`/api/admin/orders/${id}`)
+}

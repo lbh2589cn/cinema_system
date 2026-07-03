@@ -147,7 +147,7 @@ public class OrderService {
     }
 
     public PageResponse<Order> listOrders(Long userId, int page, int size) {
-        Page<Order> orderPage = orderRepository.findByUserIdAndVisible(userId,
+        Page<Order> orderPage = orderRepository.findVisibleByUserId(userId,
                 PageRequest.of(page, size));
         return PageResponse.of(orderPage.getContent(), page, size, orderPage.getTotalElements());
     }
