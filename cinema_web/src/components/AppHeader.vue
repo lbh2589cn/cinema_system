@@ -1,13 +1,17 @@
 <template>
     <el-header class="app-header">
         <div class="header-left">
-            <el-icon class="collapse-btn" @click="toggleSidebar" v-if="isAdmin">
-                <Fold />
-            </el-icon>
             <router-link to="/" class="logo">
                 <el-icon :size="24"><Film /></el-icon>
                 <span>电影院购票系统</span>
             </router-link>
+            <el-button v-if="showBackButton" text class="back-btn" @click="goBack">
+                <el-icon><ArrowLeft /></el-icon>
+                <span>返回</span>
+            </el-button>
+            <el-icon class="collapse-btn" @click="toggleSidebar" v-if="isAdminRoute">
+                <Fold />
+            </el-icon>
         </div>
         <div class="header-right">
             <template v-if="userStore.isLoggedIn">
@@ -45,14 +49,89 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { computed } from 'vue'
+import { unlockSeatsApi } from '@/api/seat'
 
 const userStore = useUserStore()
 const appStore = useAppStore()
+const route = useRoute()
 const router = useRouter()
 
-const isAdmin = computed(() => userStore.isAdmin)
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+
+const showBackButton = computed(() => {
+    return route.name !== 'MovieList'
+})
+
+function goBack() {
+    const routeName = route.name
+    switch (routeName) {
+        case 'MovieDetail':
+            router.push('/movies')
+            break
+        case 'Showing': {
+            const movieId = route.query.movieId || appStore.currentMovieId
+            if (movieId) {
+                router.push(`/movies/${movieId}`)
+            } else {
+                router.push('/movies')
+            }
+            break
+        }
+        case 'SeatSelect': {
+            // 返回选座之前，释放已锁定的座位
+            const showingId = Number(route.query.showingId) || appStore.currentShowingId
+            const seatIds = appStore.selectedSeats.map((s: any) => s.id)
+            if (showingId && seatIds.length > 0) {
+                unlockSeatsApi({ showingId, seatIds }).catch(() => {})
+            }
+            appStore.resetBooking()
+            const movieId = route.query.movieId || appStore.currentMovieId
+            router.push(`/showings?movieId=${movieId}`)
+            break
+        }
+        case 'SnackOrder': {
+            // 返回选座页面：释放已锁定的座位，选中记录保留用于回显
+            const showingId = Number(route.query.showingId) || appStore.currentShowingId
+            const seatIds = appStore.selectedSeats.map((s: any) => s.id)
+            if (showingId && seatIds.length > 0) {
+                unlockSeatsApi({ showingId, seatIds }).catch(() => {})
+            }
+            const movieId = route.query.movieId || appStore.currentMovieId
+            router.push(`/seats?movieId=${movieId}&showingId=${showingId}`)
+            break
+        }
+        case 'OrderConfirm': {
+            const movieId = route.query.movieId || appStore.currentMovieId
+            const showingId = route.query.showingId || appStore.currentShowingId
+            router.push(`/snacks?movieId=${movieId}&showingId=${showingId}`)
+            break
+        }
+        case 'Payment':
+        case 'PaymentSuccess':
+        case 'OrderList':
+        case 'Profile':
+        case 'Dashboard':
+        case 'MovieManage':
+        case 'ShowingManage':
+        case 'HallManage':
+        case 'OrderManage':
+        case 'UserManage':
+        case 'PricingRule':
+            router.push('/movies')
+            break
+        case 'OrderDetail':
+            if (route.query.from === 'admin' && userStore.isAdmin) {
+                router.push('/admin/orders')
+            } else {
+                router.push('/orders')
+            }
+            break
+        default:
+            router.back()
+    }
+}
 
 function toggleSidebar() {
     appStore.toggleSidebar()
@@ -78,7 +157,12 @@ function handleLogout() {
 .header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+
+    .back-btn {
+        font-size: 14px;
+        color: #606266;
+    }
 
     .logo {
         display: flex;

@@ -2,10 +2,7 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <div class="flex-between">
-                    <span class="card-title">选购零食</span>
-                    <el-button text @click="goBack">返回</el-button>
-                </div>
+                <span class="card-title">选购零食</span>
             </template>
             <div class="snack-grid" v-loading="loading">
                 <el-card v-for="snack in snacks" :key="snack.id" class="snack-card" shadow="hover">
@@ -74,12 +71,6 @@ function goToConfirm() {
     const movieId = route.query.movieId || appStore.currentMovieId
     const showingId = route.query.showingId || appStore.currentShowingId
     router.push(`/order/confirm?movieId=${movieId}&showingId=${showingId}`)
-}
-
-function goBack() {
-    const movieId = route.query.movieId || appStore.currentMovieId
-    const showingId = route.query.showingId || appStore.currentShowingId
-    router.push(`/seats?movieId=${movieId}&showingId=${showingId}`)
 }
 
 onMounted(async () => {

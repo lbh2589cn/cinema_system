@@ -10,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -22,6 +22,15 @@ public class PaymentService {
     private final OrderRepository orderRepository;
 
     private static final AtomicLong PAYMENT_SEQUENCE = new AtomicLong(0);
+
+    /**
+     * 生成全局唯一的支付流水号
+     */
+    public String generatePaymentNo() {
+        String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        long seq = PAYMENT_SEQUENCE.incrementAndGet() % 100000000;
+        return "PAY" + datePart + String.format("%08d", seq);
+    }
 
     @Transactional
     public Payment processPayment(PaymentRequest request, Long userId) {
@@ -35,10 +44,13 @@ public class PaymentService {
             throw new BusinessException("订单状态异常");
         }
 
-        Payment payment = new Payment();
-        payment.setOrderId(order.getId());
-        payment.setPaymentNo(generatePaymentNo());
-        payment.setAmount(order.getFinalAmount());
+        // 查找该订单的待支付记录
+        List<Payment> pendingPayments = paymentRepository.findByOrderIdAndStatus(request.getOrderId(), "PENDING");
+        if (pendingPayments.isEmpty()) {
+            throw new BusinessException("未找到待支付记录");
+        }
+
+        Payment payment = pendingPayments.get(0);
         payment.setPaymentMethod(request.getPaymentMethod());
         payment.setStatus("SUCCESS");
         payment.setPaidAt(LocalDateTime.now());
@@ -48,17 +60,5 @@ public class PaymentService {
         orderRepository.save(order);
 
         return payment;
-    }
-
-    private synchronized String generatePaymentNo() {
-        String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        for (int i = 0; i < 100000000; i++) {
-            long seq = PAYMENT_SEQUENCE.incrementAndGet() % 100000000;
-            String paymentNo = "PAY" + datePart + String.format("%08d", seq);
-            if (paymentRepository.findByPaymentNo(paymentNo).isEmpty()) {
-                return paymentNo;
-            }
-        }
-        throw new BusinessException("支付编号生成失败，请稍后重试");
     }
 }

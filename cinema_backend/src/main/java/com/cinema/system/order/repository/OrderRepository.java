@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +23,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllOrderByCreatedAtDesc(Pageable pageable);
 
     List<Order> findByUserId(Long userId);
+
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.createdAt < :expireTime")
+    List<Order> findByStatusAndCreatedAtBefore(@Param("status") String status,
+                                               @Param("expireTime") LocalDateTime expireTime);
 }

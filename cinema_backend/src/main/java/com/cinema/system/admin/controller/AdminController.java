@@ -7,6 +7,7 @@ import com.cinema.system.movie.repository.MovieRepository;
 import com.cinema.system.order.entity.Order;
 import com.cinema.system.order.repository.OrderItemRepository;
 import com.cinema.system.order.repository.OrderRepository;
+import com.cinema.system.payment.entity.Payment;
 import com.cinema.system.payment.repository.PaymentRepository;
 import com.cinema.system.seat.repository.SeatBookingRepository;
 import com.cinema.system.user.entity.User;
@@ -19,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -71,6 +74,31 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         Page<Order> orderPage = orderRepository.findAllOrderByCreatedAtDesc(PageRequest.of(page, size));
         return ApiResponse.success(PageResponse.of(orderPage.getContent(), page, size, orderPage.getTotalElements()));
+    }
+
+    @GetMapping("/payments")
+    public ApiResponse<PageResponse<Map<String, Object>>> listPayments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Payment> paymentPage = paymentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+        List<Map<String, Object>> list = paymentPage.getContent().stream().map(p -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", p.getId());
+            m.put("paymentNo", p.getPaymentNo());
+            m.put("amount", p.getAmount());
+            m.put("paymentMethod", p.getPaymentMethod());
+            m.put("status", p.getStatus());
+            m.put("paidAt", p.getPaidAt());
+            m.put("createdAt", p.getCreatedAt());
+            m.put("orderId", p.getOrderId());
+            // 查询关联订单信息
+            orderRepository.findById(p.getOrderId()).ifPresent(o -> {
+                m.put("orderNo", o.getOrderNo());
+                m.put("userId", o.getUserId());
+            });
+            return m;
+        }).collect(Collectors.toList());
+        return ApiResponse.success(PageResponse.of(list, page, size, paymentPage.getTotalElements()));
     }
 
     @Transactional

@@ -36,6 +36,10 @@
                     <el-icon><Coin /></el-icon>
                     <span>定价规则</span>
                 </el-menu-item>
+                <el-menu-item index="/admin/payments">
+                    <el-icon><Money /></el-icon>
+                    <span>交易记录</span>
+                </el-menu-item>
             </el-menu>
             <div class="admin-content">
                 <router-view />

@@ -1,10 +1,5 @@
 <template>
     <div class="page-container" v-loading="loading">
-        <div class="page-header">
-            <el-button text @click="goBack">
-                <el-icon><ArrowLeft /></el-icon> 返回
-            </el-button>
-        </div>
         <div class="movie-detail" v-if="movie">
             <div class="movie-poster">
                 <el-image :src="posterSrc" fit="cover">
@@ -49,10 +44,6 @@ const movie = ref<Movie | null>(null)
 const loading = ref(false)
 
 const posterSrc = computed(() => movie.value?.posterUrl || '')
-
-function goBack() {
-    router.push('/movies')
-}
 
 function goToBooking() {
     if (movie.value?.id) {

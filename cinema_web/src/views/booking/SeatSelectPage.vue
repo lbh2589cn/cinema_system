@@ -2,10 +2,7 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <div class="flex-between">
-                    <span class="card-title">选择座位</span>
-                    <el-button text @click="goBack">返回</el-button>
-                </div>
+                <span class="card-title">选择座位</span>
             </template>
             <div class="hall-info" v-if="showing">
                 影厅 #{{ showing.hallId }} | {{ showing.showDate }} {{ showing.showTime }}
@@ -53,11 +50,6 @@ const maxCols = computed(() => {
     return Math.max(...cols)
 })
 
-function goBack() {
-    const movieId = route.query.movieId || appStore.currentMovieId
-    router.push(`/showings?movieId=${movieId}`)
-}
-
 function toggleSeat(seat: SeatStatus) {
     if (selectedIds.value.has(seat.id)) {
         selectedIds.value.delete(seat.id)
@@ -97,6 +89,11 @@ onMounted(async () => {
         }
         showing.value = await getShowingApi(showingId)
         seats.value = await getSeatsApi(showingId)
+
+        // 从零食页返回时，恢复之前选中的座位（此时座位已在 AppHeader 中解锁为 AVAILABLE）
+        appStore.selectedSeats.forEach((s: any) => {
+            selectedIds.value.add(s.id)
+        })
     } finally {
         loading.value = false
     }

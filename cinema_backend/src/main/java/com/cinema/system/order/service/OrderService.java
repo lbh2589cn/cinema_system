@@ -10,6 +10,9 @@ import com.cinema.system.order.entity.Order;
 import com.cinema.system.order.entity.OrderItem;
 import com.cinema.system.order.repository.OrderItemRepository;
 import com.cinema.system.order.repository.OrderRepository;
+import com.cinema.system.payment.entity.Payment;
+import com.cinema.system.payment.repository.PaymentRepository;
+import com.cinema.system.payment.service.PaymentService;
 import com.cinema.system.pricing.service.PricingRuleService;
 import com.cinema.system.seat.entity.SeatBooking;
 import com.cinema.system.seat.repository.SeatBookingRepository;
@@ -42,6 +45,8 @@ public class OrderService {
     private final ShowingRepository showingRepository;
     private final SnackRepository snackRepository;
     private final PricingRuleService pricingRuleService;
+    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
 
     private static final AtomicLong ORDER_SEQUENCE = new AtomicLong(0);
 
@@ -107,7 +112,16 @@ public class OrderService {
         order.setStatus("PENDING");
         order = orderRepository.save(order);
 
-        // 5. 更新座位状态
+        // 5. 创建支付记录
+        Payment payment = new Payment();
+        payment.setOrderId(order.getId());
+        payment.setAmount(finalAmount);
+        payment.setStatus("PENDING");
+        payment.setPaymentMethod(null);
+        payment.setPaymentNo(paymentService.generatePaymentNo());
+        paymentRepository.save(payment);
+
+        // 6. 更新座位状态
         for (SeatBooking booking : seatBookings) {
             booking.setStatus("BOOKED");
             booking.setBookedBy(userId);
@@ -116,7 +130,7 @@ public class OrderService {
         }
         seatBookingRepository.saveAll(seatBookings);
 
-        // 6. 创建订单明细
+        // 7. 创建订单明细
         BigDecimal seatPrice = showing.getBasePrice();
         List<Long> hallSeatIds = seatBookings.stream()
                 .map(SeatBooking::getSeatId)
@@ -152,10 +166,10 @@ public class OrderService {
         return PageResponse.of(orderPage.getContent(), page, size, orderPage.getTotalElements());
     }
 
-    public OrderDetailResponse getOrderDetail(Long id, Long userId) {
+    public OrderDetailResponse getOrderDetail(Long id, Long userId, boolean isAdmin) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("订单不存在"));
-        if (!order.getUserId().equals(userId)) {
+        if (!isAdmin && !order.getUserId().equals(userId)) {
             throw new BusinessException("无权查看该订单");
         }
         List<OrderItem> items = orderItemRepository.findByOrderId(id);
@@ -173,6 +187,22 @@ public class OrderService {
         response.setRemark(order.getRemark());
         response.setCreatedAt(order.getCreatedAt());
         response.setItems(items);
+
+        // 获取该订单的所有支付记录
+        List<Payment> payments = paymentRepository.findByOrderId(id);
+        List<OrderDetailResponse.PaymentRecord> paymentRecords = payments.stream().map(p -> {
+            OrderDetailResponse.PaymentRecord r = new OrderDetailResponse.PaymentRecord();
+            r.setId(p.getId());
+            r.setPaymentNo(p.getPaymentNo());
+            r.setAmount(p.getAmount());
+            r.setPaymentMethod(p.getPaymentMethod());
+            r.setStatus(p.getStatus());
+            r.setPaidAt(p.getPaidAt());
+            r.setCreatedAt(p.getCreatedAt());
+            return r;
+        }).collect(Collectors.toList());
+        response.setPayments(paymentRecords);
+
         return response;
     }
 
@@ -217,13 +247,7 @@ public class OrderService {
 
     private synchronized String generateOrderNo() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        for (int i = 0; i < 100000000; i++) {
-            long seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
-            String orderNo = datePart + String.format("%08d", seq);
-            if (orderRepository.findByOrderNo(orderNo).isEmpty()) {
-                return orderNo;
-            }
-        }
-        throw new BusinessException("订单号生成失败，请稍后重试");
+        long seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
+        return datePart + String.format("%08d", seq);
     }
 }

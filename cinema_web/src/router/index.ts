@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 const routes: RouteRecordRaw[] = [
@@ -132,6 +133,11 @@ const routes: RouteRecordRaw[] = [
                 name: 'OrderManage',
                 component: () => import('@/views/admin/OrderManagePage.vue'),
             },
+            {
+                path: 'payments',
+                name: 'PaymentManage',
+                component: () => import('@/views/admin/PaymentManagePage.vue'),
+            },
         ],
     },
 ]
@@ -141,15 +147,39 @@ const router = createRouter({
     routes,
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
     const userStore = useUserStore()
+
+    // 未登录 → 跳登录页
     if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+        ElMessage.warning('请先登录')
         next({ name: 'Login', query: { redirect: to.fullPath } })
-    } else if (to.name === 'Login' && userStore.isLoggedIn) {
-        next({ name: 'MovieList' })
-    } else {
-        next()
+        return
     }
+    // 已登录 → 登录页 → 跳首页
+    if (to.name === 'Login' && userStore.isLoggedIn) {
+        next({ name: 'MovieList' })
+        return
+    }
+    // 需要管理员权限
+    if (to.matched.some(r => r.meta.role === 'ADMIN')) {
+        // 如果用户信息未加载，先拉取
+        if (!userStore.userInfo) {
+            try {
+                await userStore.fetchUserInfo()
+            } catch {
+                userStore.logout()
+                next({ name: 'Login', query: { redirect: to.fullPath } })
+                return
+            }
+        }
+        if (!userStore.isAdmin) {
+            ElMessage.error('权限不足，无法访问')
+            next({ name: 'MovieList' })
+            return
+        }
+    }
+    next()
 })
 
 export default router

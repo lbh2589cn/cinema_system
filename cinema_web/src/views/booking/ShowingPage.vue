@@ -2,10 +2,7 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <div class="flex-between">
-                    <span class="card-title">选择场次</span>
-                    <el-button text @click="goBack">返回</el-button>
-                </div>
+                <span class="card-title">选择场次</span>
             </template>
             <div class="date-selector">
                 <el-radio-group v-model="selectedDate">
@@ -75,15 +72,6 @@ function selectShowing(showing: Showing) {
     appStore.setCurrentShowing(showing.id)
     const movieId = route.query.movieId
     router.push(`/seats?movieId=${movieId}&showingId=${showing.id}`)
-}
-
-function goBack() {
-    const movieId = route.query.movieId || appStore.currentMovieId
-    if (movieId) {
-        router.push(`/movies/${movieId}`)
-    } else {
-        router.push('/movies')
-    }
 }
 
 onMounted(async () => {

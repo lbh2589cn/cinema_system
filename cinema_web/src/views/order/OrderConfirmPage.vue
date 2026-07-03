@@ -17,7 +17,6 @@
             </el-descriptions>
             <PriceSummary :total-amount="totalAmount" :discount-amount="0" :final-amount="totalAmount" />
             <div class="actions">
-                <el-button @click="goBack">返回修改</el-button>
                 <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
                     提交订单
                 </el-button>
@@ -49,12 +48,6 @@ const totalAmount = computed(() => {
     const snackTotal = appStore.selectedSnacks.reduce((sum: number, s: any) => sum + s.price * s.quantity, 0)
     return seatTotal + snackTotal
 })
-
-function goBack() {
-    const movieId = route.query.movieId || appStore.currentMovieId
-    const showingId = route.query.showingId || appStore.currentShowingId
-    router.push(`/snacks?movieId=${movieId}&showingId=${showingId}`)
-}
 
 async function handleSubmit() {
     submitting.value = true

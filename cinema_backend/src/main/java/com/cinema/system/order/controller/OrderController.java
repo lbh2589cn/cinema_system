@@ -37,7 +37,9 @@ public class OrderController {
     public ApiResponse<OrderDetailResponse> getOrderDetail(
             @PathVariable Long id, Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        return ApiResponse.success(orderService.getOrderDetail(id, userId));
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return ApiResponse.success(orderService.getOrderDetail(id, userId, isAdmin));
     }
 
     @PostMapping("/{id}/refund")

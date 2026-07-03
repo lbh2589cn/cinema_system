@@ -20,4 +20,16 @@ public class OrderDetailResponse {
     private String remark;
     private LocalDateTime createdAt;
     private List<OrderItem> items;
+    private List<PaymentRecord> payments;
+
+    @Data
+    public static class PaymentRecord {
+        private Long id;
+        private String paymentNo;
+        private BigDecimal amount;
+        private String paymentMethod;
+        private String status;
+        private LocalDateTime paidAt;
+        private LocalDateTime createdAt;
+    }
 }

@@ -32,6 +32,28 @@
                 </el-table-column>
             </el-table>
 
+            <el-divider v-if="order.payments && order.payments.length" />
+            <h3 v-if="order.payments && order.payments.length">支付记录</h3>
+            <el-table v-if="order.payments && order.payments.length" :data="order.payments" style="width: 100%; margin-top: 12px">
+                <el-table-column prop="paymentNo" label="流水号" width="180" />
+                <el-table-column prop="amount" label="金额" width="100">
+                    <template #default="{ row }">¥{{ row.amount.toFixed(2) }}</template>
+                </el-table-column>
+                <el-table-column prop="paymentMethod" label="支付方式" width="120">
+                    <template #default="{ row }">{{ paymentMethodLabel(row.paymentMethod) }}</template>
+                </el-table-column>
+                <el-table-column prop="status" label="状态" width="100">
+                    <template #default="{ row }">
+                        <el-tag :type="row.status === 'SUCCESS' ? 'success' : row.status === 'FAILED' ? 'danger' : 'info'" size="small">
+                            {{ paymentStatusLabel(row.status) }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="paidAt" label="支付时间" width="180">
+                    <template #default="{ row }">{{ row.paidAt || '-' }}</template>
+                </el-table-column>
+            </el-table>
+
             <div class="actions" v-if="order.status === 'PENDING'">
                 <el-button type="primary" @click="router.push(`/order/payment?orderId=${order.id}`)">去支付</el-button>
             </div>
@@ -58,6 +80,16 @@ const statusLabel = computed(() => {
     const map: Record<string, string> = { PENDING: '待支付', PAID: '已支付', REFUNDED: '已退款', CANCELLED: '已取消' }
     return map[order.value?.status] || order.value?.status
 })
+
+function paymentMethodLabel(method: string) {
+    const map: Record<string, string> = { WECHAT: '微信支付', ALIPAY: '支付宝', CREDIT_CARD: '信用卡', BALANCE: '余额' }
+    return map[method] || method
+}
+
+function paymentStatusLabel(status: string) {
+    const map: Record<string, string> = { PENDING: '待支付', SUCCESS: '支付成功', FAILED: '支付失败', REFUNDED: '已退款' }
+    return map[status] || status
+}
 
 onMounted(async () => {
     loading.value = true

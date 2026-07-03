@@ -58,7 +58,7 @@ function statusLabel(status: string) {
 }
 
 function viewDetail(order: Order) {
-    router.push(`/orders/${order.id}`)
+    router.push(`/orders/${order.id}?from=admin`)
 }
 
 async function handleDelete(order: Order) {
