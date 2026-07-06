@@ -17,4 +17,6 @@ public class SnackCreateRequest {
 
     @NotNull(message = "库存不能为空")
     private Integer stock;
+
+    private String status;
 }

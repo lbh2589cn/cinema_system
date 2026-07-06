@@ -22,6 +22,12 @@ public class SnackController {
         return ApiResponse.success(snackService.listSnacks());
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<Snack>> listAllSnacks() {
+        return ApiResponse.success(snackService.listAllSnacks());
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Snack> createSnack(@Valid @RequestBody SnackCreateRequest request) {
@@ -32,5 +38,12 @@ public class SnackController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Snack> updateSnack(@PathVariable Long id, @RequestBody SnackCreateRequest request) {
         return ApiResponse.success(snackService.updateSnack(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> deleteSnack(@PathVariable Long id) {
+        snackService.deleteSnack(id);
+        return ApiResponse.success("删除成功", null);
     }
 }

@@ -44,6 +44,13 @@ public class MovieController {
         return ApiResponse.success(movieService.updateMovie(id, request));
     }
 
+    @PutMapping("/{id}/hide")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> hideMovie(@PathVariable Long id) {
+        movieService.hideMovie(id);
+        return ApiResponse.success("已下架", null);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteMovie(@PathVariable Long id) {

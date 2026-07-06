@@ -12,10 +12,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Service
 @RequiredArgsConstructor
 public class MovieService {
     private final MovieRepository movieRepository;
+
+    private final Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads", "images");
 
     public PageResponse<Movie> listMovies(String keyword, String genre, String status, int page, int size) {
         Page<Movie> moviePage = movieRepository.searchMovies(keyword, genre, status,
@@ -43,6 +50,9 @@ public class MovieService {
 
     public Movie updateMovie(Long id, MovieUpdateRequest request) {
         Movie movie = getMovie(id);
+        if (request.getPosterUrl() != null && !request.getPosterUrl().equals(movie.getPosterUrl())) {
+            deleteImageFile(movie.getPosterUrl());
+        }
         if (request.getTitle() != null) movie.setTitle(request.getTitle());
         if (request.getPosterUrl() != null) movie.setPosterUrl(request.getPosterUrl());
         if (request.getDescription() != null) movie.setDescription(request.getDescription());
@@ -54,9 +64,30 @@ public class MovieService {
         return movieRepository.save(movie);
     }
 
-    public void deleteMovie(Long id) {
+    public void hideMovie(Long id) {
         Movie movie = getMovie(id);
         movie.setStatus("OFF");
         movieRepository.save(movie);
+    }
+
+    public void deleteMovie(Long id) {
+        Movie movie = getMovie(id);
+        deleteImageFile(movie.getPosterUrl());
+        movieRepository.delete(movie);
+    }
+
+    private void deleteImageFile(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) return;
+        try {
+            String relativePath = imageUrl.replace("/uploads/images/", "");
+            Path filePath = uploadDir.resolve(relativePath);
+            Files.deleteIfExists(filePath);
+            // also try to delete parent directory if empty
+            Path parentDir = filePath.getParent();
+            if (parentDir != null && !parentDir.equals(uploadDir)) {
+                try { Files.deleteIfExists(parentDir); } catch (IOException ignored) {}
+            }
+        } catch (IOException ignored) {
+        }
     }
 }
