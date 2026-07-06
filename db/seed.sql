@@ -5,7 +5,7 @@
 -- =============================================================
 
 -- =============================================================
--- 1. 用户（6个）
+-- 1. 用户
 --    密码均为 "123456" 的 BCrypt 哈希
 -- =============================================================
 INSERT INTO `user` (user_id, username, password_hash, phone, nickname, role, is_member, `status`)
@@ -18,7 +18,7 @@ VALUES
     ('eve',       'Eve',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000005', '小伊',   'USER',  TRUE,  'ACTIVE');
 
 -- =============================================================
--- 2. 影厅（3个）
+-- 2. 影厅
 -- =============================================================
 INSERT INTO hall (name, `rows`, `cols`, seat_count, description)
 VALUES
@@ -65,7 +65,7 @@ SELECT 3, r.n, c.n, 'VIP'
 FROM rows_gen r, cols_gen c;
 
 -- =============================================================
--- 4. 电影（10部）
+-- 4. 电影
 -- =============================================================
 INSERT INTO movie (title, poster_url, description, duration, rating, genre, release_date, `status`)
 VALUES

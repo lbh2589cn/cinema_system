@@ -3,13 +3,21 @@ package com.cinema.system.admin.controller;
 import com.cinema.system.common.enums.PaymentStatusEnum;
 import com.cinema.system.common.response.ApiResponse;
 import com.cinema.system.common.response.PageResponse;
+import com.cinema.system.hall.entity.Hall;
+import com.cinema.system.hall.repository.HallRepository;
 import com.cinema.system.movie.repository.MovieRepository;
 import com.cinema.system.order.entity.Order;
 import com.cinema.system.order.repository.OrderItemRepository;
 import com.cinema.system.order.repository.OrderRepository;
 import com.cinema.system.payment.entity.Payment;
 import com.cinema.system.payment.repository.PaymentRepository;
+import com.cinema.system.pricing.entity.PricingRule;
+import com.cinema.system.pricing.repository.PricingRuleRepository;
 import com.cinema.system.seat.repository.SeatBookingRepository;
+import com.cinema.system.showing.entity.Showing;
+import com.cinema.system.showing.repository.ShowingRepository;
+import com.cinema.system.snack.entity.Snack;
+import com.cinema.system.snack.repository.SnackRepository;
 import com.cinema.system.user.entity.User;
 import com.cinema.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +44,10 @@ public class AdminController {
     private final OrderItemRepository orderItemRepository;
     private final SeatBookingRepository seatBookingRepository;
     private final PaymentRepository paymentRepository;
+    private final HallRepository hallRepository;
+    private final SnackRepository snackRepository;
+    private final ShowingRepository showingRepository;
+    private final PricingRuleRepository pricingRuleRepository;
 
     @GetMapping("/users")
     public ApiResponse<PageResponse<User>> listUsers(
@@ -101,6 +114,39 @@ public class AdminController {
         return ApiResponse.success(PageResponse.of(list, page, size, paymentPage.getTotalElements()));
     }
 
+    @GetMapping("/halls")
+    public ApiResponse<PageResponse<Hall>> listHalls(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Hall> hallPage = hallRepository.findAll(PageRequest.of(page, size));
+        return ApiResponse.success(PageResponse.of(hallPage.getContent(), page, size, hallPage.getTotalElements()));
+    }
+
+    @GetMapping("/snacks")
+    public ApiResponse<PageResponse<Snack>> listSnacks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Snack> snackPage = snackRepository.findAll(PageRequest.of(page, size));
+        return ApiResponse.success(PageResponse.of(snackPage.getContent(), page, size, snackPage.getTotalElements()));
+    }
+
+    @GetMapping("/showings")
+    public ApiResponse<PageResponse<Showing>> listShowings(
+            @RequestParam(required = false) LocalDate date,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Showing> showingPage = showingRepository.findShowingsPageable(null, date, PageRequest.of(page, size));
+        return ApiResponse.success(PageResponse.of(showingPage.getContent(), page, size, showingPage.getTotalElements()));
+    }
+
+    @GetMapping("/pricing-rules")
+    public ApiResponse<PageResponse<PricingRule>> listPricingRules(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PricingRule> rulePage = pricingRuleRepository.findAll(PageRequest.of(page, size));
+        return ApiResponse.success(PageResponse.of(rulePage.getContent(), page, size, rulePage.getTotalElements()));
+    }
+
     @Transactional
     @DeleteMapping("/orders/{id}")
     public ApiResponse<Void> hardDeleteOrder(@PathVariable Long id) {
@@ -125,5 +171,14 @@ public class AdminController {
         orderRepository.delete(order);
 
         return ApiResponse.success("订单已永久删除", null);
+    }
+
+    @Transactional
+    @DeleteMapping("/payments/{id}")
+    public ApiResponse<Void> hardDeletePayment(@PathVariable Long id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("支付记录不存在"));
+        paymentRepository.delete(payment);
+        return ApiResponse.success("支付记录已永久删除", null);
     }
 }

@@ -3,6 +3,7 @@ package com.cinema.system.seat.repository;
 import com.cinema.system.seat.entity.SeatBooking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface SeatBookingRepository extends JpaRepository<SeatBooking, Long> {
@@ -29,4 +31,8 @@ public interface SeatBookingRepository extends JpaRepository<SeatBooking, Long> 
     List<SeatBooking> findExpiredLocks(@Param("expireTime") LocalDateTime expireTime);
 
     List<SeatBooking> findByOrderId(Long orderId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from SeatBooking s where s.seatId in :seatIds")
+    void deleteBySeatIdIn(@Param("seatIds") Set<Long> seatIds);
 }

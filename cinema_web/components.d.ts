@@ -40,6 +40,8 @@ declare module 'vue' {
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTag: typeof import('element-plus/es')['ElTag']
     ElTimePicker: typeof import('element-plus/es')['ElTimePicker']
+    ElTransfer: typeof import('element-plus/es')['ElTransfer']
+    ElUpload: typeof import('element-plus/es')['ElUpload']
     MovieCard: typeof import('./src/components/MovieCard.vue')['default']
     PriceSummary: typeof import('./src/components/PriceSummary.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

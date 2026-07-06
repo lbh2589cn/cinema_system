@@ -1,6 +1,7 @@
 package com.cinema.system.common.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -11,6 +12,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String uploadPath = System.getProperty("user.dir") + "/uploads/";
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath);
+                .addResourceLocations("file:" + uploadPath)
+                .setCacheControl(CacheControl.noCache());
     }
 }

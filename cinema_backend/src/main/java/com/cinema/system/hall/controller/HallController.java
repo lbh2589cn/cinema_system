@@ -2,6 +2,7 @@ package com.cinema.system.hall.controller;
 
 import com.cinema.system.common.response.ApiResponse;
 import com.cinema.system.hall.dto.HallCreateRequest;
+import com.cinema.system.hall.dto.HallUpdateRequest;
 import com.cinema.system.hall.entity.Hall;
 import com.cinema.system.hall.service.HallService;
 import jakarta.validation.Valid;
@@ -32,5 +33,18 @@ public class HallController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Hall> createHall(@Valid @RequestBody HallCreateRequest request) {
         return ApiResponse.success(hallService.createHall(request));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Hall> updateHall(@PathVariable Long id, @Valid @RequestBody HallUpdateRequest request) {
+        return ApiResponse.success(hallService.updateHall(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> deleteHall(@PathVariable Long id) {
+        hallService.deleteHall(id);
+        return ApiResponse.success(null);
     }
 }

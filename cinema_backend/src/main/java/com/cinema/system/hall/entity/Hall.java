@@ -15,7 +15,7 @@ public class Hall {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "`rows`", nullable = false)
     private Integer rows;
 
     @Column(nullable = false)

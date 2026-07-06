@@ -27,6 +27,10 @@ export function payApi(data: { orderId: number; paymentMethod: string }): Promis
 export function getAdminPaymentsApi(params: {
     page?: number
     size?: number
-}): Promise<{ content: any[]; totalElements: number }> {
+}): Promise<{ content: any[]; total: number }> {
     return request.get('/api/admin/payments', { params })
+}
+
+export function deleteAdminPaymentApi(id: number): Promise<void> {
+    return request.delete(`/api/admin/payments/${id}`)
 }

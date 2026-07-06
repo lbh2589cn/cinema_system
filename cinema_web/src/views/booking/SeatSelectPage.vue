@@ -90,10 +90,12 @@ onMounted(async () => {
         showing.value = await getShowingApi(showingId)
         seats.value = await getSeatsApi(showingId)
 
-        // 从零食页返回时，恢复之前选中的座位（此时座位已在 AppHeader 中解锁为 AVAILABLE）
+        // 从零食页返回时，恢复之前选中的座位
         appStore.selectedSeats.forEach((s: any) => {
             selectedIds.value.add(s.id)
         })
+    } catch (e: any) {
+        ElMessage.error(e?.message || '获取座位信息失败')
     } finally {
         loading.value = false
     }

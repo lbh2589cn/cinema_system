@@ -31,6 +31,16 @@
             </el-table>
         </el-card>
 
+        <div class="pagination-wrapper" v-if="total > 0">
+            <el-pagination
+                v-model:current-page="page"
+                :page-size="size"
+                :total="total"
+                layout="prev, pager, next"
+                @current-change="loadShowings"
+            />
+        </div>
+
         <el-dialog v-model="showDialog" title="新增排片" width="500px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
                 <el-form-item label="电影" prop="movieId">
@@ -64,7 +74,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getShowingsApi, createShowingApi, cancelShowingApi } from '@/api/showing'
+import { createShowingApi, cancelShowingApi } from '@/api/showing'
+import { getAdminShowingsApi } from '@/api/admin'
 import { getMoviesApi } from '@/api/movie'
 import { getHallsApi } from '@/api/hall'
 import type { Showing } from '@/api/showing'
@@ -79,6 +90,9 @@ const saving = ref(false)
 const showDialog = ref(false)
 const filterDate = ref('')
 const formRef = ref()
+const page = ref(1)
+const size = ref(10)
+const total = ref(0)
 
 const form = reactive({
     movieId: null as number | null,
@@ -108,7 +122,9 @@ function statusLabel(status: string) {
 async function loadShowings() {
     loading.value = true
     try {
-        showings.value = await getShowingsApi({ date: filterDate.value || undefined })
+        const result = await getAdminShowingsApi({ date: filterDate.value || undefined, page: page.value - 1, size: size.value })
+        showings.value = result.content
+        total.value = result.total
     } finally {
         loading.value = false
     }
@@ -156,5 +172,11 @@ onMounted(async () => {
 
 .page-title {
     font-size: 20px;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
 </style>

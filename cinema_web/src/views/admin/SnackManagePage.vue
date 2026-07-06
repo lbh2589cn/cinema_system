@@ -1,26 +1,27 @@
 <template>
     <div>
         <div class="page-header">
-            <h2 class="page-title">电影管理</h2>
-            <el-button type="primary" @click="showDialog = true">新增电影</el-button>
+            <h2 class="page-title">小食管理</h2>
+            <el-button type="primary" @click="showDialog = true">新增小食</el-button>
         </div>
 
         <el-card class="page-card">
-            <el-table :data="movies" v-loading="loading" style="width: 100%">
+            <el-table :data="snacks" v-loading="loading" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="title" label="电影名称" min-width="180" />
-                <el-table-column prop="duration" label="时长(分钟)" width="100" />
-                <el-table-column prop="rating" label="评分" width="80" />
-                <el-table-column prop="genre" label="类型" width="150" />
+                <el-table-column prop="name" label="名称" min-width="150" />
+                <el-table-column prop="price" label="价格" width="100">
+                    <template #default="{ row }">¥{{ row.price }}</template>
+                </el-table-column>
+                <el-table-column prop="stock" label="库存" width="80" />
                 <el-table-column prop="status" label="状态" width="100">
                     <template #default="{ row }">
-                        <el-tag :type="row.status === 'ON' ? 'success' : 'info'">{{ row.status === 'ON' ? '上映中' : '已下架' }}</el-tag>
+                        <el-tag :type="row.status === 'ON' ? 'success' : 'info'">{{ row.status === 'ON' ? '在售' : '下架' }}</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作" width="250">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click="editMovie(row)">编辑</el-button>
-                        <el-button text type="danger" @click="handleDelete(row)">{{ row.status === 'ON' ? '下架' : '上架' }}</el-button>
+                        <el-button text type="primary" @click="editSnack(row)">编辑</el-button>
+                        <el-button text type="danger" @click="toggleStatus(row)">{{ row.status === 'ON' ? '下架' : '上架' }}</el-button>
                         <el-button text type="danger" @click="handleHardDelete(row)">删除</el-button>
                     </template>
                 </el-table-column>
@@ -33,17 +34,17 @@
                 :page-size="size"
                 :total="total"
                 layout="prev, pager, next"
-                @current-change="loadMovies"
+                @current-change="loadSnacks"
             />
         </div>
 
         <!-- Add/Edit Dialog -->
-        <el-dialog v-model="showDialog" :title="isEdit ? '编辑电影' : '新增电影'" width="600px">
-            <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-                <el-form-item label="电影名称" prop="title">
-                    <el-input v-model="form.title" />
+        <el-dialog v-model="showDialog" :title="isEdit ? '编辑小食' : '新增小食'" width="500px">
+            <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+                <el-form-item label="小食名称" prop="name">
+                    <el-input v-model="form.name" />
                 </el-form-item>
-                <el-form-item label="海报">
+                <el-form-item label="图片">
                     <el-upload
                         :auto-upload="false"
                         :on-change="handleFileChange"
@@ -54,29 +55,17 @@
                         ref="uploadRef"
                     >
                         <el-button type="primary">选择图片</el-button>
-                        <template #tip>
-                            <span class="upload-tip">支持 JPG/PNG，建议尺寸 300×450px</span>
-                        </template>
                     </el-upload>
                     <div v-if="previewUrl" class="upload-preview">
-                        <img :src="previewUrl" alt="海报预览" />
+                        <img :src="previewUrl" alt="预览" />
                         <el-button text type="danger" size="small" @click="removeImage">移除</el-button>
                     </div>
                 </el-form-item>
-                <el-form-item label="简介" prop="description">
-                    <el-input v-model="form.description" type="textarea" :rows="3" />
+                <el-form-item label="价格" prop="price">
+                    <el-input-number v-model="form.price" :min="0" :precision="2" :step="1" />
                 </el-form-item>
-                <el-form-item label="时长(分钟)" prop="duration">
-                    <el-input-number v-model="form.duration" :min="1" />
-                </el-form-item>
-                <el-form-item label="评分" prop="rating">
-                    <el-input-number v-model="form.rating" :min="0" :max="10" :step="0.1" />
-                </el-form-item>
-                <el-form-item label="类型" prop="genre">
-                    <el-input v-model="form.genre" placeholder="用逗号分隔，如 Sci-Fi,Action" />
-                </el-form-item>
-                <el-form-item label="上映日期" prop="releaseDate">
-                    <el-date-picker v-model="form.releaseDate" type="date" value-format="YYYY-MM-DD" />
+                <el-form-item label="库存" prop="stock">
+                    <el-input-number v-model="form.stock" :min="0" />
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -90,11 +79,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getMoviesApi, createMovieApi, updateMovieApi, hideMovieApi, deleteMovieApi } from '@/api/movie'
-import type { Movie } from '@/api/movie'
+import { createSnackApi, updateSnackApi, deleteSnackApi } from '@/api/snack'
+import { getAdminSnacksApi } from '@/api/admin'
+import type { Snack } from '@/api/snack'
 import request from '@/api/request'
 
-const movies = ref<Movie[]>([])
+const snacks = ref<Snack[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)
@@ -110,45 +100,38 @@ const pendingFile = ref<File | null>(null)
 const previewUrl = ref<string>('')
 
 const form = reactive({
-    title: '',
-    posterUrl: '',
-    description: '',
-    duration: 120,
-    rating: 0,
-    genre: '',
-    releaseDate: '',
+    name: '',
+    imageUrl: '',
+    price: 0,
+    stock: 0,
 })
 
 const rules = {
-    title: [{ required: true, message: '请输入电影名称', trigger: 'blur' }],
-    duration: [{ required: true, message: '请输入时长', trigger: 'blur' }],
+    name: [{ required: true, message: '请输入小食名称', trigger: 'blur' }],
+    price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
+    stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
 }
 
-async function loadMovies() {
+async function loadSnacks() {
     loading.value = true
     try {
-        const result = await getMoviesApi({ page: page.value - 1, size: size.value })
-        movies.value = result.content
+        const result = await getAdminSnacksApi({ page: page.value - 1, size: size.value })
+        snacks.value = result.content
         total.value = result.total
     } finally {
         loading.value = false
     }
 }
 
-function editMovie(movie: Movie) {
+function editSnack(snack: Snack) {
     isEdit.value = true
-    editId.value = movie.id
-    Object.assign(form, {
-        title: movie.title,
-        posterUrl: movie.posterUrl || '',
-        description: movie.description || '',
-        duration: movie.duration,
-        rating: movie.rating || 0,
-        genre: movie.genre || '',
-        releaseDate: movie.releaseDate || '',
-    })
-    if (movie.posterUrl) {
-        previewUrl.value = movie.posterUrl
+    editId.value = snack.id
+    form.name = snack.name
+    form.imageUrl = snack.imageUrl || ''
+    form.price = snack.price
+    form.stock = snack.stock
+    if (snack.imageUrl) {
+        previewUrl.value = snack.imageUrl
     }
     showDialog.value = true
 }
@@ -156,13 +139,10 @@ function editMovie(movie: Movie) {
 function resetForm() {
     isEdit.value = false
     editId.value = null
-    form.title = ''
-    form.posterUrl = ''
-    form.description = ''
-    form.duration = 120
-    form.rating = 0
-    form.genre = ''
-    form.releaseDate = ''
+    form.name = ''
+    form.imageUrl = ''
+    form.price = 0
+    form.stock = 0
     pendingFile.value = null
     if (previewUrl.value) {
         URL.revokeObjectURL(previewUrl.value)
@@ -174,7 +154,6 @@ function resetForm() {
 function handleFileChange(uploadFile: any) {
     const file = uploadFile.raw
     if (!file) return
-    // 释放上一次预览 URL
     if (previewUrl.value && !previewUrl.value.startsWith('http')) {
         URL.revokeObjectURL(previewUrl.value)
     }
@@ -192,7 +171,7 @@ function removeImage() {
         URL.revokeObjectURL(previewUrl.value)
     }
     previewUrl.value = ''
-    form.posterUrl = ''
+    form.imageUrl = ''
     uploadRef.value?.clearFiles()
 }
 
@@ -211,10 +190,10 @@ function beforeUpload(file: File) {
 }
 
 async function uploadPendingFile(): Promise<string> {
-    if (!pendingFile.value) return form.posterUrl
+    if (!pendingFile.value) return form.imageUrl
     const formData = new FormData()
     formData.append('file', pendingFile.value)
-    formData.append('directory', 'movies')
+    formData.append('directory', 'snacks')
     return request.post('/api/upload', formData)
 }
 
@@ -223,54 +202,44 @@ async function handleSave() {
     if (!valid) return
     saving.value = true
     try {
-        // 先上传图片（如果有待上传的文件）
         if (pendingFile.value) {
             const url = await uploadPendingFile()
-            form.posterUrl = url
+            form.imageUrl = url
         }
         if (isEdit.value && editId.value) {
-            await updateMovieApi(editId.value, form)
+            await updateSnackApi(editId.value, { name: form.name, imageUrl: form.imageUrl, price: form.price, stock: form.stock })
             ElMessage.success('更新成功')
         } else {
-            await createMovieApi(form as any)
+            await createSnackApi({ name: form.name, imageUrl: form.imageUrl, price: form.price, stock: form.stock })
             ElMessage.success('创建成功')
         }
         showDialog.value = false
         resetForm()
-        await loadMovies()
+        await loadSnacks()
     } finally {
         saving.value = false
     }
 }
 
-async function handleDelete(movie: Movie) {
-    const action = movie.status === 'ON' ? '下架' : '上架'
-    try {
-        await ElMessageBox.confirm(`确定要${action}该电影吗？`, '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
-        if (movie.status === 'ON') {
-            await hideMovieApi(movie.id)
-        } else {
-            await updateMovieApi(movie.id, { status: 'ON' })
-        }
-        ElMessage.success(`${action}成功`)
-        await loadMovies()
-    } catch {
-        // cancelled
-    }
+async function toggleStatus(snack: Snack) {
+    const newStatus = snack.status === 'ON' ? 'OFF' : 'ON'
+    await updateSnackApi(snack.id, { status: newStatus })
+    ElMessage.success(newStatus === 'ON' ? '上架成功' : '下架成功')
+    await loadSnacks()
 }
 
-async function handleHardDelete(movie: Movie) {
+async function handleHardDelete(snack: Snack) {
     try {
-        await ElMessageBox.confirm(`确定要删除「${movie.title}」吗？此操作不可恢复！`, '警告', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'error' })
-        await deleteMovieApi(movie.id)
+        await ElMessageBox.confirm(`确定要删除「${snack.name}」吗？此操作不可恢复！`, '警告', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'error' })
+        await deleteSnackApi(snack.id)
         ElMessage.success('已删除')
-        await loadMovies()
+        await loadSnacks()
     } catch {
         // cancelled
     }
 }
 
-onMounted(loadMovies)
+onMounted(loadSnacks)
 </script>
 
 <style scoped lang="scss">
@@ -285,12 +254,6 @@ onMounted(loadMovies)
     font-size: 20px;
 }
 
-.upload-tip {
-    font-size: 12px;
-    color: #909399;
-    margin-left: 8px;
-}
-
 .upload-preview {
     margin-top: 12px;
     display: flex;
@@ -298,8 +261,8 @@ onMounted(loadMovies)
     gap: 12px;
 
     img {
-        max-width: 120px;
-        max-height: 160px;
+        max-width: 100px;
+        max-height: 100px;
         border-radius: 4px;
         border: 1px solid #e4e7ed;
     }

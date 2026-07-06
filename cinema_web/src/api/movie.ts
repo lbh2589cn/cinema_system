@@ -41,6 +41,10 @@ export function updateMovieApi(id: number, data: Partial<MovieCreateRequest>): P
     return request.put(`/api/movies/${id}`, data)
 }
 
+export function hideMovieApi(id: number): Promise<void> {
+    return request.put(`/api/movies/${id}/hide`)
+}
+
 export function deleteMovieApi(id: number): Promise<void> {
     return request.delete(`/api/movies/${id}`)
 }

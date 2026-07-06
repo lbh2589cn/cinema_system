@@ -16,6 +16,10 @@
                     <el-icon><Film /></el-icon>
                     <span>电影管理</span>
                 </el-menu-item>
+                <el-menu-item index="/admin/snacks">
+                    <el-icon><Food /></el-icon>
+                    <span>小食管理</span>
+                </el-menu-item>
                 <el-menu-item index="/admin/showings">
                     <el-icon><Timer /></el-icon>
                     <span>排片管理</span>
@@ -51,6 +55,8 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { Coin, DataAnalysis, Film, Food, List, Money, OfficeBuilding, Timer, User } from '@element-plus/icons-vue';
+import { transferCheckedChangeFn } from 'element-plus';
 
 const route = useRoute()
 const appStore = useAppStore()

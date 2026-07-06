@@ -26,6 +26,11 @@
                     <template #default="{ row }">{{ row.paidAt || '-' }}</template>
                 </el-table-column>
                 <el-table-column prop="createdAt" label="创建时间" width="170" />
+                <el-table-column label="操作" width="120">
+                    <template #default="{ row }">
+                        <el-button text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+                    </template>
+                </el-table-column>
             </el-table>
 
             <div class="pagination-wrapper" v-if="total > 0">
@@ -43,11 +48,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAdminPaymentsApi } from '@/api/payment'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getAdminPaymentsApi, deleteAdminPaymentApi } from '@/api/payment'
 
 const payments = ref<any[]>([])
 const loading = ref(false)
-const page = ref(0)
+const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 
@@ -66,12 +72,27 @@ function statusLabel(status: string) {
     return map[status] || status
 }
 
+async function handleDelete(row: any) {
+    try {
+        await ElMessageBox.confirm(
+            `确认永久删除交易记录 ${row.paymentNo}？此操作不可恢复。`,
+            '确认删除',
+            { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }
+        )
+        await deleteAdminPaymentApi(row.id)
+        ElMessage.success('交易记录已永久删除')
+        await fetchPayments()
+    } catch {
+        // cancelled or error
+    }
+}
+
 async function fetchPayments() {
     loading.value = true
     try {
-        const res = await getAdminPaymentsApi({ page: page.value, size: size.value })
+        const res = await getAdminPaymentsApi({ page: page.value - 1, size: size.value })
         payments.value = res.content
-        total.value = res.totalElements
+        total.value = res.total
     } finally {
         loading.value = false
     }

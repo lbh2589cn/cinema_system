@@ -23,6 +23,16 @@
             </el-table>
         </el-card>
 
+        <div class="pagination-wrapper" v-if="total > 0">
+            <el-pagination
+                v-model:current-page="page"
+                :page-size="size"
+                :total="total"
+                layout="prev, pager, next"
+                @current-change="loadRules"
+            />
+        </div>
+
         <el-dialog v-model="showDialog" title="编辑定价规则" width="500px">
             <el-form :model="editForm" label-width="100px">
                 <el-form-item label="规则名称">
@@ -49,7 +59,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getPricingRulesApi, updatePricingRuleApi } from '@/api/pricing'
+import { updatePricingRuleApi } from '@/api/pricing'
+import { getAdminPricingRulesApi } from '@/api/admin'
 import type { PricingRule } from '@/api/pricing'
 
 const rules = ref<PricingRule[]>([])
@@ -57,6 +68,9 @@ const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)
 const editId = ref<number | null>(null)
+const page = ref(1)
+const size = ref(10)
+const total = ref(0)
 
 const editForm = reactive({
     ruleName: '',
@@ -68,7 +82,9 @@ const editForm = reactive({
 async function loadRules() {
     loading.value = true
     try {
-        rules.value = await getPricingRulesApi()
+        const result = await getAdminPricingRulesApi({ page: page.value - 1, size: size.value })
+        rules.value = result.content
+        total.value = result.total
     } finally {
         loading.value = false
     }
@@ -112,5 +128,11 @@ onMounted(loadRules)
 .page-title {
     font-size: 20px;
     margin-bottom: 20px;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
 </style>

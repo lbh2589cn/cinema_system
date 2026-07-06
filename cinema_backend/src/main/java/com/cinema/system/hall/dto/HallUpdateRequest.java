@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class HallCreateRequest {
+public class HallUpdateRequest {
     @NotBlank(message = "影厅名称不能为空")
     private String name;
 

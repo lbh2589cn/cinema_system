@@ -2,7 +2,7 @@
     <div>
         <div class="page-header">
             <h2 class="page-title">影厅管理</h2>
-            <el-button type="primary" @click="showDialog = true">新增影厅</el-button>
+            <el-button type="primary" @click="openCreate">新增影厅</el-button>
         </div>
 
         <div class="hall-grid" v-loading="loading">
@@ -13,11 +13,25 @@
                     <p>共 {{ hall.seatCount }} 个座位</p>
                     <p v-if="hall.description" class="desc">{{ hall.description }}</p>
                 </div>
-                <el-button text type="primary" @click="viewSeats(hall)">查看座位布局</el-button>
+                <div class="hall-actions">
+                    <el-button text type="primary" @click="viewSeats(hall)">查看座位</el-button>
+                    <el-button text type="warning" @click="openEdit(hall)">编辑</el-button>
+                    <el-button text type="danger" @click="handleDelete(hall)">删除</el-button>
+                </div>
             </el-card>
         </div>
 
-        <el-dialog v-model="showDialog" title="新增影厅" width="500px">
+        <div class="pagination-wrapper" v-if="total > 0">
+            <el-pagination
+                v-model:current-page="page"
+                :page-size="size"
+                :total="total"
+                layout="prev, pager, next"
+                @current-change="loadHalls"
+            />
+        </div>
+
+        <el-dialog v-model="showDialog" :title="isEdit ? '编辑影厅' : '新增影厅'" width="560px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
                 <el-form-item label="名称" prop="name">
                     <el-input v-model="form.name" />
@@ -28,20 +42,40 @@
                 <el-form-item label="列数" prop="cols">
                     <el-input-number v-model="form.cols" :min="1" :max="30" />
                 </el-form-item>
-                <el-form-item label="描述" prop="description">
-                    <el-input v-model="form.description" type="textarea" />
-                </el-form-item>
-            </el-form>
+                <el-form-item label="座位图" v-if="showDialog">
+                    <div class="seat-edit-area">
+                        <div class="screen-label">银幕</div>
+                        <div class="screen-line"></div>
+                        <div class="seat-grid-preview" :style="{ gridTemplateColumns: `repeat(${form.cols}, minmax(36px, 1fr))` }">
+                            <div v-for="seat in editSeats" :key="`${seat.rowNum}-${seat.colNum}`"
+                                 class="mini-seat" :class="seat.seatType.toLowerCase()"
+                                 @click="toggleSeatType(seat.rowNum, seat.colNum)"
+                                 :title="'点击切换'">
+                                {{ seat.rowNum }}-{{ seat.colNum }}
+                             </div>
+                         </div>
+                         <p class="seat-legend">
+                             <span class="mini-seat standard">标准座</span>
+                             <span class="mini-seat vip">VIP座</span>
+                         </p>
+                         <p class="seat-tip">* 点击切换座位类型（标准座 / VIP座）</p>
+                     </div>
+                 </el-form-item>
+                 <el-form-item label="描述" prop="description">
+                     <el-input v-model="form.description" type="textarea" />
+                 </el-form-item>
+             </el-form>
             <template #footer>
                 <el-button @click="showDialog = false">取消</el-button>
-                <el-button type="primary" @click="handleCreate" :loading="saving">保存</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">{{ isEdit ? '更新' : '保存' }}</el-button>
             </template>
         </el-dialog>
 
         <el-dialog v-model="showSeatsDialog" title="座位布局" width="600px">
             <div v-if="selectedHall" class="seat-layout">
-                <div class="screen">银幕</div>
-                <div class="seat-grid-preview">
+                <div class="screen-label">银幕</div>
+                <div class="screen-line"></div>
+                <div class="seat-grid-preview" :style="{ gridTemplateColumns: `repeat(${selectedHall.cols}, minmax(36px, 1fr))` }">
                     <div v-for="seat in hallSeats" :key="seat.id" class="mini-seat" :class="seat.seatType.toLowerCase()">
                         {{ seat.rowNum }}-{{ seat.colNum }}
                     </div>
@@ -59,10 +93,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getHallsApi, getHallDetailApi, createHallApi } from '@/api/hall'
-import type { Hall, HallSeat } from '@/api/hall'
+import { ref, reactive, watch, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getHallDetailApi, createHallApi, updateHallApi, deleteHallApi } from '@/api/hall'
+import { getAdminHallsApi } from '@/api/admin'
+import type { Hall, HallSeat, SeatTypeUpdate } from '@/api/hall'
 
 const halls = ref<Hall[]>([])
 const hallSeats = ref<HallSeat[]>([])
@@ -71,7 +106,14 @@ const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)
 const showSeatsDialog = ref(false)
+const isEdit = ref(false)
+const editId = ref<number | null>(null)
 const formRef = ref()
+const page = ref(1)
+const size = ref(10)
+const total = ref(0)
+
+const editSeats = ref<HallSeat[]>([])
 
 const form = reactive({
     name: '',
@@ -89,9 +131,62 @@ const rules = {
 async function loadHalls() {
     loading.value = true
     try {
-        halls.value = await getHallsApi()
+        const result = await getAdminHallsApi({ page: page.value - 1, size: size.value })
+        halls.value = result.content
+        total.value = result.total
     } finally {
         loading.value = false
+    }
+}
+
+function resetForm() {
+    isEdit.value = false
+    editId.value = null
+    form.name = ''
+    form.rows = 5
+    form.cols = 10
+    form.description = ''
+    editSeats.value = []
+}
+
+function generateSeats(rows: number, cols: number) {
+    const seats: HallSeat[] = []
+    for (let r = 1; r <= rows; r++) {
+        for (let c = 1; c <= cols; c++) {
+            seats.push({ id: 0, hallId: 0, rowNum: r, colNum: c, seatType: 'STANDARD' })
+        }
+    }
+    return seats
+}
+
+function openCreate() {
+    resetForm()
+    editSeats.value = generateSeats(form.rows, form.cols)
+    showDialog.value = true
+}
+
+async function openEdit(hall: Hall) {
+    isEdit.value = true
+    editId.value = hall.id
+    form.name = hall.name
+    form.rows = hall.rows
+    form.cols = hall.cols
+    form.description = hall.description || ''
+    const detail = await getHallDetailApi(hall.id)
+    editSeats.value = detail.seats
+    showDialog.value = true
+}
+
+watch([() => form.rows, () => form.cols], ([rows, cols]) => {
+    if (showDialog.value && !isEdit.value) {
+        editSeats.value = generateSeats(rows, cols)
+    }
+})
+
+function toggleSeatType(rowNum: number, colNum: number) {
+    const seat = editSeats.value.find(s => s.rowNum === rowNum && s.colNum === colNum)
+    if (seat) {
+        seat.seatType = seat.seatType === 'STANDARD' ? 'VIP' : 'STANDARD'
     }
 }
 
@@ -102,19 +197,38 @@ async function viewSeats(hall: Hall) {
     showSeatsDialog.value = true
 }
 
-async function handleCreate() {
+async function handleSave() {
     const valid = await formRef.value?.validate().catch(() => false)
     if (!valid) return
     saving.value = true
     try {
-        await createHallApi(form)
-        ElMessage.success('创建成功')
+        const changes: SeatTypeUpdate[] = editSeats.value
+            .filter(s => s.seatType !== 'STANDARD')
+            .map(s => ({ rowNum: s.rowNum, colNum: s.colNum, seatType: s.seatType }))
+        const payload = { ...form, seats: changes.length > 0 ? changes : undefined }
+        if (isEdit.value && editId.value) {
+            await updateHallApi(editId.value, payload)
+            ElMessage.success('更新成功')
+        } else {
+            await createHallApi(payload as any)
+            ElMessage.success('创建成功')
+        }
         showDialog.value = false
-        form.name = ''
-        form.description = ''
+        resetForm()
         await loadHalls()
     } finally {
         saving.value = false
+    }
+}
+
+async function handleDelete(hall: Hall) {
+    try {
+        await ElMessageBox.confirm(`确定要删除影厅「${hall.name}」吗？此操作不可恢复！`, '警告', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'error' })
+        await deleteHallApi(hall.id)
+        ElMessage.success('删除成功')
+        await loadHalls()
+    } catch {
+        // cancelled
     }
 }
 
@@ -159,6 +273,11 @@ onMounted(loadHalls)
             font-size: 13px;
         }
     }
+
+    .hall-actions {
+        display: flex;
+        gap: 8px;
+    }
 }
 
 .seat-layout {
@@ -168,30 +287,41 @@ onMounted(loadHalls)
     gap: 16px;
 }
 
-.screen {
-    width: 60%;
-    height: 6px;
-    background: linear-gradient(to right, transparent, #409eff, transparent);
-    border-radius: 50%;
-    text-align: center;
+.screen-label {
     font-size: 12px;
     color: #909399;
-    padding-top: 10px;
+    text-align: center;
+    margin-bottom: 2px;
+}
+
+.screen-line {
+    width: 60%;
+    height: 4px;
+    background: linear-gradient(to right, transparent, #409eff, transparent);
+    border-radius: 50%;
+    margin-bottom: 8px;
 }
 
 .seat-grid-preview {
     display: grid;
-    grid-template-columns: repeat(10, auto);
-    gap: 4px;
+    gap: 3px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 4px;
 }
 
 .mini-seat {
-    padding: 2px 6px;
-    font-size: 11px;
-    border-radius: 3px;
+    height: 24px;
+    padding: 0 2px;
+    font-size: 10px;
+    line-height: 24px;
+    border-radius: 4px;
     background: #e8f4e8;
     color: #67c23a;
     border: 1px solid #b3e0b3;
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
 
     &.vip {
         background: #fdf6ec;
@@ -206,5 +336,25 @@ onMounted(loadHalls)
     gap: 16px;
     font-size: 13px;
     color: #909399;
+}
+
+.seat-edit-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.seat-tip {
+    margin: 0;
+    font-size: 12px;
+    color: #909399;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
 </style>

@@ -26,3 +26,19 @@ export function getAdminOrdersApi(params?: { page?: number; size?: number }): Pr
 export function hardDeleteOrderApi(id: number): Promise<void> {
     return request.delete(`/api/admin/orders/${id}`)
 }
+
+export function getAdminHallsApi(params?: { page?: number; size?: number }): Promise<{ content: any[]; total: number }> {
+    return request.get('/api/admin/halls', { params })
+}
+
+export function getAdminSnacksApi(params?: { page?: number; size?: number }): Promise<{ content: any[]; total: number }> {
+    return request.get('/api/admin/snacks', { params })
+}
+
+export function getAdminShowingsApi(params?: { date?: string; page?: number; size?: number }): Promise<{ content: any[]; total: number }> {
+    return request.get('/api/admin/showings', { params })
+}
+
+export function getAdminPricingRulesApi(params?: { page?: number; size?: number }): Promise<{ content: any[]; total: number }> {
+    return request.get('/api/admin/pricing-rules', { params })
+}
