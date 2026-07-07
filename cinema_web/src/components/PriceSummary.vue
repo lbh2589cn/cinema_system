@@ -1,24 +1,31 @@
 <template>
     <div class="price-summary">
         <div class="summary-row" v-if="totalAmount > 0">
-            <span>总价</span>
+            <span>原价</span>
             <span class="amount">¥{{ totalAmount.toFixed(2) }}</span>
         </div>
-        <div class="summary-row discount" v-if="discountAmount > 0">
-            <span>优惠</span>
-            <span class="amount">-¥{{ discountAmount.toFixed(2) }}</span>
+        <div class="breakdown" v-if="items && items.length > 0">
+            <div class="breakdown-item" v-for="item in items" :key="item.ruleName">
+                <span>{{ item.ruleName }}</span>
+                <span class="amount" :class="item.impact > 0 ? 'surcharge' : 'discount'">
+                    {{ item.impact > 0 ? '+' : '-' }}¥{{ Math.abs(item.impact).toFixed(2) }}
+                </span>
+            </div>
         </div>
-        <div class="summary-row final" v-if="finalAmount > 0">
-            <span>实付</span>
+        <el-divider style="margin: 8px 0" />
+        <div class="summary-row final">
+            <span>应付金额</span>
             <span class="amount">¥{{ finalAmount.toFixed(2) }}</span>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import type { DiscountItem } from '@/api/pricing'
+
 defineProps<{
     totalAmount: number
-    discountAmount: number
+    items?: DiscountItem[]
     finalAmount: number
 }>()
 </script>
@@ -37,10 +44,6 @@ defineProps<{
     font-size: 14px;
     color: #606266;
 
-    &.discount .amount {
-        color: #67c23a;
-    }
-
     &.final {
         font-size: 16px;
         font-weight: 600;
@@ -49,6 +52,28 @@ defineProps<{
         .amount {
             color: #f56c6c;
             font-size: 22px;
+        }
+    }
+}
+
+.breakdown {
+    padding: 4px 0 4px 16px;
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 0;
+        font-size: 13px;
+        color: #909399;
+
+        .amount {
+            &.discount {
+                color: #67c23a;
+            }
+            &.surcharge {
+                color: #e6a23c;
+            }
         }
     }
 }

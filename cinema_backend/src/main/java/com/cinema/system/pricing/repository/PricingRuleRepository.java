@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface PricingRuleRepository extends JpaRepository<PricingRule, Long> {
-    List<PricingRule> findByEnabledTrueOrderByPriorityDesc();
+    List<PricingRule> findByEnabledTrueOrderByPriorityAsc();
+    List<PricingRule> findAllByOrderByPriorityAsc();
 }

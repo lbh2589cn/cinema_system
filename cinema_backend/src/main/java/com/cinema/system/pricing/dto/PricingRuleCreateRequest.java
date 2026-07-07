@@ -5,10 +5,9 @@ import java.math.BigDecimal;
 import java.time.LocalTime;
 
 @Data
-public class PricingRuleUpdateRequest {
+public class PricingRuleCreateRequest {
     private String ruleName;
     private BigDecimal ruleValue;
-    private Integer priority;
     private Boolean enabled;
     private String description;
 

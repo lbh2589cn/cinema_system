@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -25,13 +24,12 @@ public class OrderTimeoutScheduler {
     private final PaymentRepository paymentRepository;
 
     /**
-     * 每10秒执行一次，取消创建超过1分钟仍未支付的订单并释放座位
+     * 每10秒执行一次，取消创建超过3分钟仍未支付的订单并释放座位
      */
     @Scheduled(fixedDelay = 10000)
     @Transactional
     public void cancelExpiredOrders() {
-        LocalDateTime expireTime = LocalDateTime.now().minusMinutes(1);
-        List<Order> expiredOrders = orderRepository.findByStatusAndCreatedAtBefore("PENDING", expireTime);
+        List<Order> expiredOrders = orderRepository.findExpiredPendingOrders("PENDING");
 
         if (expiredOrders.isEmpty()) {
             return;
@@ -44,10 +42,10 @@ public class OrderTimeoutScheduler {
                 order.setStatus("CANCELLED");
                 orderRepository.save(order);
 
-                // 同步更新支付记录为 CANCELLED
+                // 同步更新支付记录为 FAILED
                 List<Payment> payments = paymentRepository.findByOrderIdAndStatus(order.getId(), "PENDING");
                 for (Payment payment : payments) {
-                    payment.setStatus("CANCELLED");
+                    payment.setStatus("FAILED");
                 }
                 paymentRepository.saveAll(payments);
 

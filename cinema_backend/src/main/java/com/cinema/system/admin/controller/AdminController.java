@@ -23,6 +23,7 @@ import com.cinema.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -143,7 +144,7 @@ public class AdminController {
     public ApiResponse<PageResponse<PricingRule>> listPricingRules(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<PricingRule> rulePage = pricingRuleRepository.findAll(PageRequest.of(page, size));
+        Page<PricingRule> rulePage = pricingRuleRepository.findAll(PageRequest.of(page, size, Sort.by("priority").ascending()));
         return ApiResponse.success(PageResponse.of(rulePage.getContent(), page, size, rulePage.getTotalElements()));
     }
 

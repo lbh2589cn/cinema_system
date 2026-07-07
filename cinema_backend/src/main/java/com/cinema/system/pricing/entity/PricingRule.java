@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Entity
@@ -16,9 +17,6 @@ public class PricingRule {
     @Column(name = "rule_name", nullable = false, length = 100)
     private String ruleName;
 
-    @Column(name = "rule_type", nullable = false, length = 50)
-    private String ruleType;
-
     @Column(name = "rule_value", nullable = false, precision = 10, scale = 4)
     private BigDecimal ruleValue;
 
@@ -30,6 +28,30 @@ public class PricingRule {
 
     @Column(length = 255)
     private String description;
+
+    @Column(name = "condition_member")
+    private Boolean conditionMember;
+
+    @Column(name = "condition_weekdays", length = 50)
+    private String conditionWeekdays;
+
+    @Column(name = "condition_time_start")
+    private LocalTime conditionTimeStart;
+
+    @Column(name = "condition_time_end")
+    private LocalTime conditionTimeEnd;
+
+    @Column(name = "condition_ticket_min")
+    private Integer conditionTicketMin;
+
+    @Column(name = "condition_ticket_max")
+    private Integer conditionTicketMax;
+
+    @Column(name = "condition_seat_ratio_min", precision = 5, scale = 2)
+    private BigDecimal conditionSeatRatioMin;
+
+    @Column(name = "condition_seat_ratio_max", precision = 5, scale = 2)
+    private BigDecimal conditionSeatRatioMax;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

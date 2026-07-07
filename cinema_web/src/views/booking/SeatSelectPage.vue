@@ -28,7 +28,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getSeatsApi, lockSeatsApi } from '@/api/seat'
+import { getSeatsApi, lockSeatsApi, unlockSeatsApi } from '@/api/seat'
 import { getShowingApi } from '@/api/showing'
 import { useAppStore } from '@/stores/app'
 import type { SeatStatus } from '@/api/seat'
@@ -52,8 +52,15 @@ const maxCols = computed(() => {
 
 function toggleSeat(seat: SeatStatus) {
     if (selectedIds.value.has(seat.id)) {
+        // 取消选中：释放该座位的锁定
         selectedIds.value.delete(seat.id)
-    } else {
+        const showingId = Number(route.query.showingId)
+        if (showingId) {
+            unlockSeatsApi({ showingId, seatIds: [seat.id] }).then(() => {
+                seat.status = 'AVAILABLE'
+            }).catch(() => {})
+        }
+    } else if (seat.status === 'AVAILABLE') {
         selectedIds.value.add(seat.id)
     }
 }
@@ -63,10 +70,13 @@ async function handleNext() {
     try {
         const showingId = Number(route.query.showingId)
         const movieId = route.query.movieId
-        await lockSeatsApi({
-            showingId,
-            seatIds: Array.from(selectedIds.value),
-        })
+
+        // 只锁定尚未锁定的座位
+        const seatsToLock = seats.value.filter(s => selectedIds.value.has(s.id) && s.status === 'AVAILABLE')
+        if (seatsToLock.length > 0) {
+            await lockSeatsApi({ showingId, seatIds: seatsToLock.map(s => s.id) })
+        }
+
         appStore.setSelectedSeats(
             seats.value.filter(s => selectedIds.value.has(s.id))
         )
@@ -88,6 +98,8 @@ onMounted(async () => {
             return
         }
         showing.value = await getShowingApi(showingId)
+
+        // 重新获取最新座位数据
         seats.value = await getSeatsApi(showingId)
 
         // 从零食页返回时，恢复之前选中的座位

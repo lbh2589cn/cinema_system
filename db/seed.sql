@@ -124,7 +124,7 @@ VALUES
      '2026-05-01', 'ON');
 
 -- =============================================================
--- 5. 排片（生成 5 天 × 每天 10 场 = 50 场）
+-- 5. 排片
 --    覆盖不同时间段和不同影厅
 -- =============================================================
 INSERT INTO showing (movie_id, hall_id, show_date, show_time, base_price, `status`)
@@ -184,7 +184,7 @@ WHERE s.show_date = '2026-07-18'
   AND sb.id % 7 = 0;
 
 -- =============================================================
--- 7. 订单 + 明细 + 支付（生成 5 个示例订单）
+-- 7. 订单 + 明细 + 支付
 -- =============================================================
 
 -- 7a. 订单主表
@@ -240,7 +240,7 @@ VALUES
     (4, 'PAY202607170004', 320.00, 'ALIPAY', 'SUCCESS', '2026-07-16 20:01:00', '2026-07-16 20:00:30');
 
 -- =============================================================
--- 8. 零食（5款）
+-- 8. 零食
 -- =============================================================
 INSERT INTO snack (name, price, image_url, stock, `status`)
 VALUES
@@ -248,19 +248,27 @@ VALUES
     ('Coca-Cola', 2.00, 'assets/snacks/cola.png',     200, 'ON'),
     ('Nachos',    4.50, 'assets/snacks/nachos.png',   80,  'ON'),
     ('Sprite',    2.00, 'assets/snacks/sprite.png',   150, 'ON'),
-    ('M&M''s',    3.50, 'assets/snacks/mms.png',      120, 'ON');
+    ('Drinks',    3.50, 'assets/snacks/drinks.png',   120, 'ON');
 
 -- =============================================================
 -- 9. 定价规则
 -- =============================================================
-INSERT INTO pricing_rule (rule_name, rule_type, rule_value, priority, enabled, description)
+INSERT INTO pricing_rule (rule_name, rule_value, priority, enabled, description,
+    condition_member, condition_weekdays, condition_time_start, condition_time_end,
+    condition_ticket_min, condition_ticket_max, condition_seat_ratio_min, condition_seat_ratio_max)
 VALUES
-    ('会员折扣 8折',        'MEMBER_DISCOUNT',   0.80, 10, TRUE,  '会员享受 8 折优惠'),
-    ('周二半价',             'TUESDAY_DISCOUNT',  0.50, 20, TRUE,  '每周二所有票价半价'),
-    ('黄金时段加价 15%',    'PEAK_SURCHARGE',    1.15, 5,  TRUE,  '18:00-22:00 黄金时段加价 15%'),
-    ('节假日折扣 8折',      'HOLIDAY_DISCOUNT',  0.80, 15, TRUE,  '节假日享受 8 折'),
-    ('高销量加价 10%',      'SOLD_OUT_SURCHARGE',1.10, 5,  TRUE,  '销量超过 100 张时加价 10%'),
-    ('低销量折扣 9折',      'LOW_SALES_DISCOUNT',0.90, 5,  TRUE,  '销量低于 30 张时折扣 9 折');
+    ('周二半价',             0.50, 1, TRUE,  '每周二所有票价半价',
+        NULL, 'TUESDAY', NULL, NULL, NULL, NULL, NULL, NULL),
+    ('周末折扣 8折',         0.80, 2, TRUE,  '周六周日享受 8 折',
+        NULL, 'SATURDAY,SUNDAY', NULL, NULL, NULL, NULL, NULL, NULL),
+    ('会员折扣 8折',         0.80, 3, TRUE,  '会员享受 8 折优惠',
+        TRUE, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('低销量折扣 9折',       0.90, 4, TRUE,  '剩余座位超过 70% 时折扣 9 折',
+        NULL, NULL, NULL, NULL, NULL, NULL, 0.70, NULL),
+    ('黄金时段加价 15%',     1.15, 5, TRUE,  '18:00-22:00 黄金时段加价 15%',
+        NULL, NULL, '18:00:00', '22:00:00', NULL, NULL, NULL, NULL),
+    ('高销量加价 10%',       1.10, 6, TRUE,  '剩余座位少于 30% 时加价 10%',
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.30);
 
 -- =============================================================
 -- 10. 汇总信息输出（控制台）

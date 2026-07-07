@@ -15,7 +15,7 @@
                     </div>
                 </el-descriptions-item>
             </el-descriptions>
-            <PriceSummary :total-amount="totalAmount" :discount-amount="0" :final-amount="totalAmount" />
+            <PriceSummary :total-amount="totalAmount" :items="discountItems" :final-amount="finalAmount" />
             <div class="actions">
                 <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
                     提交订单
@@ -33,8 +33,10 @@ import { useAppStore } from '@/stores/app'
 import { createOrderApi } from '@/api/order'
 import { getMovieApi } from '@/api/movie'
 import { getShowingApi } from '@/api/showing'
+import { calculatePriceApi } from '@/api/pricing'
 import type { Movie } from '@/api/movie'
 import type { Showing } from '@/api/showing'
+import type { DiscountItem } from '@/api/pricing'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,12 +44,35 @@ const appStore = useAppStore()
 const submitting = ref(false)
 const movie = ref<Movie | null>(null)
 const showing = ref<Showing | null>(null)
+const discountResult = ref<{ finalAmount: number; items: DiscountItem[] } | null>(null)
 
 const totalAmount = computed(() => {
     const seatTotal = (showing.value?.basePrice || 0) * appStore.selectedSeats.length
     const snackTotal = appStore.selectedSnacks.reduce((sum: number, s: any) => sum + s.price * s.quantity, 0)
     return seatTotal + snackTotal
 })
+
+const discountItems = computed(() => discountResult.value?.items || [])
+
+const finalAmount = computed(() => {
+    if (discountResult.value) return discountResult.value.finalAmount
+    return totalAmount.value
+})
+
+async function fetchPriceBreakdown() {
+    const showingId = Number(route.query.showingId) || appStore.currentShowingId
+    if (!showingId || totalAmount.value <= 0) return
+    try {
+        const result = await calculatePriceApi({
+            showingId,
+            ticketCount: appStore.selectedSeats.length,
+            totalAmount: totalAmount.value,
+        })
+        discountResult.value = { finalAmount: result.finalAmount, items: result.items }
+    } catch {
+        // Breakdown unavailable, fall back to totalAmount
+    }
+}
 
 async function handleSubmit() {
     submitting.value = true
@@ -80,6 +105,7 @@ onMounted(async () => {
     if (showingId) {
         showing.value = await getShowingApi(showingId)
     }
+    await fetchPriceBreakdown()
 })
 </script>
 

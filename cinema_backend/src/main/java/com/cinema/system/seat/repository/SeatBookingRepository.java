@@ -39,4 +39,7 @@ public interface SeatBookingRepository extends JpaRepository<SeatBooking, Long> 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from SeatBooking s where s.showingId = :showingId")
     void deleteByShowingId(@Param("showingId") Long showingId);
+
+    @Query("SELECT COUNT(s) FROM SeatBooking s WHERE s.showingId = :showingId AND s.status = 'BOOKED'")
+    Long countBookedByShowingId(@Param("showingId") Long showingId);
 }

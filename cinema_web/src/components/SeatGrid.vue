@@ -48,6 +48,9 @@ const gridStyle = computed(() => ({
 function toggleSeat(seat: SeatStatus) {
     if (seat.status === 'AVAILABLE') {
         emit('select', seat)
+    } else if (seat.status === 'LOCKED' && props.selectedIds.has(seat.id)) {
+        // 已选中的锁定座位允许取消选择
+        emit('select', seat)
     }
 }
 </script>
@@ -123,6 +126,7 @@ function toggleSeat(seat: SeatStatus) {
         background: #409eff;
         color: #fff;
         border-color: #409eff;
+        cursor: pointer;
     }
 
     &.vip {

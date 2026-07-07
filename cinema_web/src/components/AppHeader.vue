@@ -92,12 +92,8 @@ function goBack() {
             break
         }
         case 'SnackOrder': {
-            // 返回选座页面：释放已锁定的座位，选中记录保留用于回显
+            // 返回选座页面：保留锁定状态，仅恢复选中记录用于回显
             const showingId = Number(route.query.showingId) || appStore.currentShowingId
-            const seatIds = appStore.selectedSeats.map((s: any) => s.id)
-            if (showingId && seatIds.length > 0) {
-                unlockSeatsApi({ showingId, seatIds }).catch(() => {})
-            }
             const movieId = route.query.movieId || appStore.currentMovieId
             router.push(`/seats?movieId=${movieId}&showingId=${showingId}`)
             break

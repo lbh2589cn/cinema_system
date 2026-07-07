@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -101,8 +102,9 @@ public class OrderService {
 
         // 3. 计算动态价格
         BigDecimal totalAmount = seatTotal.add(snackTotal);
-        BigDecimal discountAmount = pricingRuleService.calculateDiscount(request.getShowingId(), userId, totalAmount);
-        BigDecimal finalAmount = totalAmount.subtract(discountAmount);
+        var discountResult = pricingRuleService.calculateDiscount(request.getShowingId(), userId, totalAmount, seatBookings.size());
+        BigDecimal discountAmount = discountResult.getTotalDiscount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal finalAmount = discountResult.getFinalAmount();
 
         // 4. 创建订单
         Order order = new Order();
@@ -127,9 +129,9 @@ public class OrderService {
 
         // 6. 更新座位状态
         for (SeatBooking booking : seatBookings) {
-            booking.setStatus("BOOKED");
-            booking.setBookedBy(userId);
-            booking.setBookedAt(LocalDateTime.now());
+            booking.setStatus("LOCKED");
+            booking.setLockedBy(userId);
+            booking.setLockedAt(LocalDateTime.now());
             booking.setOrderId(order.getId());
         }
         seatBookingRepository.saveAll(seatBookings);
@@ -258,6 +260,11 @@ public class OrderService {
     private synchronized String generateOrderNo() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         long seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
-        return datePart + String.format("%08d", seq);
+        String orderNo = datePart + String.format("%08d", seq);
+        while (orderRepository.findByOrderNo(orderNo).isPresent()) {
+            seq = ORDER_SEQUENCE.incrementAndGet() % 100000000;
+            orderNo = datePart + String.format("%08d", seq);
+        }
+        return orderNo;
     }
 }
