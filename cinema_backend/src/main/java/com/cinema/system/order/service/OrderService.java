@@ -66,6 +66,10 @@ public class OrderService {
         }
         Showing showing = showingRepository.findById(request.getShowingId())
                 .orElseThrow(() -> new BusinessException("排片不存在"));
+        LocalDateTime showDateTime = showing.getShowDate().atTime(showing.getShowTime());
+        if (LocalDateTime.now().isAfter(showDateTime) || LocalDateTime.now().isEqual(showDateTime)) {
+            throw new BusinessException("电影已开始放映，无法购票");
+        }
         BigDecimal seatTotal = showing.getBasePrice().multiply(BigDecimal.valueOf(seatBookings.size()));
 
         // 2. 计算零食总价
@@ -215,6 +219,12 @@ public class OrderService {
         }
         if (!"PAID".equals(order.getStatus())) {
             throw new BusinessException("只有已支付的订单才能退票");
+        }
+        Showing showing = showingRepository.findById(order.getShowingId())
+                .orElseThrow(() -> new BusinessException("排片不存在"));
+        LocalDateTime showDateTime = showing.getShowDate().atTime(showing.getShowTime());
+        if (LocalDateTime.now().isAfter(showDateTime) || LocalDateTime.now().isEqual(showDateTime)) {
+            throw new BusinessException("电影已开始放映，无法退票");
         }
 
         order.setStatus("REFUNDED");

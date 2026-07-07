@@ -17,6 +17,8 @@ public interface ShowingRepository extends JpaRepository<Showing, Long> {
     List<Showing> findByMovieIdAndShowDateOrderByShowTimeAsc(Long movieId, LocalDate showDate);
 
     @Query("SELECT s FROM Showing s WHERE " +
+           "s.status != 'CANCELLED' AND " +
+           "(s.showDate > CURRENT_DATE OR (s.showDate = CURRENT_DATE AND s.showTime > CURRENT_TIME)) AND " +
            "(:movieId IS NULL OR s.movieId = :movieId) AND " +
            "(:date IS NULL OR s.showDate = :date) " +
            "ORDER BY s.showDate ASC, s.showTime ASC")

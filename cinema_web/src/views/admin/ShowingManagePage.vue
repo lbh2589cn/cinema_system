@@ -2,12 +2,12 @@
     <div>
         <div class="page-header">
             <h2 class="page-title">排片管理</h2>
-            <el-button type="primary" @click="showDialog = true">新增排片</el-button>
+            <el-button type="primary" @click="handleAdd">新增排片</el-button>
         </div>
 
         <el-card class="page-card">
             <div class="filters" style="margin-bottom: 16px">
-                <el-date-picker v-model="filterDate" type="date" placeholder="选择日期" @change="loadShowings" />
+                <el-date-picker v-model="filterDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" @change="loadShowings" />
             </div>
             <el-table :data="showings" v-loading="loading" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
@@ -23,9 +23,12 @@
                         <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作" width="120">
+                <el-table-column label="操作" width="260">
                     <template #default="{ row }">
-                        <el-button v-if="row.status === 'SCHEDULED'" text type="danger" @click="handleCancel(row)">取消</el-button>
+                        <el-button text type="primary" @click="handleEdit(row)">编辑</el-button>
+                        <el-button text type="danger" v-if="canCancelRow(row)" @click="handleCancel(row)">取消</el-button>
+                        <el-button text type="success" v-if="canRestoreRow(row)" @click="handleRestore(row)">恢复</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -41,7 +44,7 @@
             />
         </div>
 
-        <el-dialog v-model="showDialog" title="新增排片" width="500px">
+        <el-dialog v-model="showDialog" :title="isEdit ? '编辑排片' : '新增排片'" width="500px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
                 <el-form-item label="电影" prop="movieId">
                     <el-select v-model="form.movieId" placeholder="选择电影" filterable style="width: 100%">
@@ -64,8 +67,8 @@
                 </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="showDialog = false">取消</el-button>
-                <el-button type="primary" @click="handleCreate" :loading="saving">保存</el-button>
+                <el-button @click="showDialog = false">关闭</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
             </template>
         </el-dialog>
     </div>
@@ -74,7 +77,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { createShowingApi, cancelShowingApi } from '@/api/showing'
+import { createShowingApi, updateShowingApi, cancelShowingApi, restoreShowingApi, deleteShowingApi } from '@/api/showing'
 import { getAdminShowingsApi } from '@/api/admin'
 import { getMoviesApi } from '@/api/movie'
 import { getHallsApi } from '@/api/hall'
@@ -94,6 +97,9 @@ const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 
+const isEdit = ref(false)
+const editingShowing = ref<Showing | null>(null)
+
 const form = reactive({
     movieId: null as number | null,
     hallId: null as number | null,
@@ -110,13 +116,26 @@ const rules = {
 }
 
 function statusType(status: string) {
-    const map: Record<string, string> = { SCHEDULED: 'success', ONGOING: 'warning', FINISHED: 'info', CANCELLED: 'danger' }
+    const map: Record<string, string> = { SCHEDULED: 'success', CANCELLED: 'danger' }
     return map[status] || 'info'
 }
 
 function statusLabel(status: string) {
-    const map: Record<string, string> = { SCHEDULED: '待放映', ONGOING: '放映中', FINISHED: '已结束', CANCELLED: '已取消' }
+    const map: Record<string, string> = { SCHEDULED: '正常', CANCELLED: '取消' }
     return map[status] || status
+}
+
+function isShowTimeBeforeNow(showing: Showing): boolean {
+    const showDateTime = new Date(`${showing.showDate}T${showing.showTime}`)
+    return showDateTime > new Date()
+}
+
+function canCancelRow(showing: Showing): boolean {
+    return showing.status === 'SCHEDULED' && isShowTimeBeforeNow(showing)
+}
+
+function canRestoreRow(showing: Showing): boolean {
+    return showing.status === 'CANCELLED' && isShowTimeBeforeNow(showing)
 }
 
 async function loadShowings() {
@@ -130,13 +149,57 @@ async function loadShowings() {
     }
 }
 
-async function handleCreate() {
+function resetForm() {
+    form.movieId = null
+    form.hallId = null
+    form.showDate = ''
+    form.showTime = ''
+    form.basePrice = 50
+    formRef.value?.resetFields()
+}
+
+function handleAdd() {
+    isEdit.value = false
+    editingShowing.value = null
+    resetForm()
+    showDialog.value = true
+}
+
+function handleEdit(showing: Showing) {
+    isEdit.value = true
+    editingShowing.value = showing
+    form.movieId = showing.movieId
+    form.hallId = showing.hallId
+    form.showDate = showing.showDate
+    form.showTime = showing.showTime
+    form.basePrice = showing.basePrice
+    showDialog.value = true
+}
+
+async function handleSave() {
     const valid = await formRef.value?.validate().catch(() => false)
     if (!valid) return
     saving.value = true
     try {
-        await createShowingApi(form as any)
-        ElMessage.success('创建成功')
+        if (isEdit.value && editingShowing.value) {
+            await updateShowingApi(editingShowing.value.id, {
+                movieId: form.movieId ?? undefined,
+                hallId: form.hallId ?? undefined,
+                showDate: form.showDate,
+                showTime: form.showTime,
+                basePrice: form.basePrice,
+            })
+            ElMessage.success('更新成功')
+        } else {
+            await createShowingApi({
+                movieId: form.movieId!,
+                hallId: form.hallId!,
+                showDate: form.showDate,
+                showTime: form.showTime,
+                basePrice: form.basePrice,
+            })
+            ElMessage.success('创建成功')
+        }
         showDialog.value = false
         await loadShowings()
     } finally {
@@ -146,9 +209,34 @@ async function handleCreate() {
 
 async function handleCancel(showing: Showing) {
     try {
-        await ElMessageBox.confirm('确定要取消该场次吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('确定要取消吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
         await cancelShowingApi(showing.id)
         ElMessage.success('已取消')
+        showDialog.value = false
+        await loadShowings()
+    } catch {
+        // cancelled
+    }
+}
+
+async function handleRestore(showing: Showing) {
+    try {
+        await ElMessageBox.confirm('确定要恢复吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await restoreShowingApi(showing.id)
+        ElMessage.success('已恢复')
+        showDialog.value = false
+        await loadShowings()
+    } catch {
+        // cancelled
+    }
+}
+
+async function handleDelete(showing: Showing) {
+    try {
+        await ElMessageBox.confirm('确定要删除该场次记录吗？此操作不可恢复，将同时删除关联的座位预订数据。', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await deleteShowingApi(showing.id)
+        ElMessage.success('删除成功')
+        showDialog.value = false
         await loadShowings()
     } catch {
         // cancelled

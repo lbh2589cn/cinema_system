@@ -1,10 +1,4 @@
 -- =============================================================
--- 电影院购票系统 - 初始化种子数据（演示版）
--- 说明: 用于开发/演示环境初始化，包含大量随机但合理的数据
--- 注意: 生产环境请勿自动执行此脚本
--- =============================================================
-
--- =============================================================
 -- 1. 用户
 --    密码均为 "123456" 的 BCrypt 哈希
 -- =============================================================
@@ -154,11 +148,7 @@ SELECT
     15.0 + (m.id * 2.5)
         + CASE WHEN ts.slot_idx IN (4, 5) THEN 8.0 ELSE 0 END      -- 黄金时段加价
         + CASE WHEN ts.slot_idx = 1 THEN -3.0 ELSE 0 END,           -- 早场优惠
-    CASE
-        WHEN d.d < '2026-07-17' AND ts.slot_idx <= 2 THEN 'FINISHED'
-        WHEN d.d = '2026-07-18' AND ts.slot_idx <= 2 THEN 'ONGOING'
-        ELSE 'SCHEDULED'
-    END
+    'SCHEDULED'
 FROM movie m, dates d, time_slots ts
 -- 每部电影每天最多 3 个时段（而不是全部5个），避免数据过多
 WHERE ts.slot_idx <= 3 + ((m.id + DATEDIFF(d.d, '2026-07-15')) % 3);
@@ -172,7 +162,7 @@ SELECT s.id, hs.id, 'AVAILABLE', 0
 FROM showing s
 JOIN hall_seat hs ON hs.hall_id = s.hall_id;
 
--- 将一部分已结束场次的座位标记为 BOOKED（模拟已售出）
+-- 将一部分场次的座位标记为 BOOKED（模拟已售出）
 -- 影响 20% 的座位，使统计数据和仪表盘有内容可展示
 UPDATE seat_booking sb
 JOIN showing s ON s.id = sb.showing_id
@@ -180,8 +170,7 @@ SET sb.status = 'BOOKED',
     sb.booked_by = FLOOR(1 + RAND() * 5),          -- 随机分配用户 1-5
     sb.booked_at = DATE_ADD(s.show_date, INTERVAL -1 DAY),
     sb.order_id = s.id  -- 临时用 showing_id 占位
-WHERE s.status = 'FINISHED'
-  AND sb.id % 5 = 0;   -- 每 5 个选 1 个
+WHERE sb.id % 5 = 0;   -- 每 5 个选 1 个
 
 -- 将部分场次标记少量 LOCKED（模拟锁定中，15分钟超时）
 UPDATE seat_booking sb

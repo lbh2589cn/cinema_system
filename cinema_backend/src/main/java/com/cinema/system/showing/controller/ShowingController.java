@@ -2,6 +2,7 @@ package com.cinema.system.showing.controller;
 
 import com.cinema.system.common.response.ApiResponse;
 import com.cinema.system.showing.dto.ShowingCreateRequest;
+import com.cinema.system.showing.dto.ShowingUpdateRequest;
 import com.cinema.system.showing.entity.Showing;
 import com.cinema.system.showing.service.ShowingService;
 import jakarta.validation.Valid;
@@ -36,10 +37,30 @@ public class ShowingController {
         return ApiResponse.success(showingService.createShowing(request));
     }
 
-    @DeleteMapping("/{id}")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Showing> updateShowing(@PathVariable Long id, @RequestBody ShowingUpdateRequest request) {
+        return ApiResponse.success(showingService.updateShowing(id, request));
+    }
+
+    @PostMapping("/{id}/cancel")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> cancelShowing(@PathVariable Long id) {
         showingService.cancelShowing(id);
         return ApiResponse.success("取消成功", null);
+    }
+
+    @PostMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> restoreShowing(@PathVariable Long id) {
+        showingService.restoreShowing(id);
+        return ApiResponse.success("恢复成功", null);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> deleteShowing(@PathVariable Long id) {
+        showingService.deleteShowing(id);
+        return ApiResponse.success("删除成功", null);
     }
 }

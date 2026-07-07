@@ -1,12 +1,4 @@
 -- =============================================================
--- 电影院购票系统 - 数据库 Schema
--- 数据库: PostgreSQL 15+
--- 说明: 包含 11 张业务表，覆盖用户、电影、影厅、排片、
---       座位、零食、订单、支付、定价等完整业务域
---       不含外键约束，关联关系在业务层维护
--- =============================================================
-
--- =============================================================
 -- 1. 用户表
 --    存储系统用户信息，包括普通用户和管理员
 -- =============================================================
@@ -130,13 +122,13 @@ CREATE TABLE IF NOT EXISTS showing (
     show_date       DATE                NOT NULL,                   -- 放映日期
     show_time       TIME                NOT NULL,                   -- 放映时间
     base_price      DECIMAL(10, 2)      NOT NULL DEFAULT 0.00,      -- 基础票价
-    status          VARCHAR(20)         NOT NULL DEFAULT 'SCHEDULED', -- 状态: SCHEDULED / ONGOING / FINISHED / CANCELLED
+    status          VARCHAR(20)         NOT NULL DEFAULT 'SCHEDULED', -- 状态: SCHEDULED / CANCELLED
     created_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
 
     CONSTRAINT uk_showing UNIQUE (movie_id, hall_id, show_date, show_time),
     CONSTRAINT ck_showing_base_price CHECK (base_price >= 0),
-    CONSTRAINT ck_showing_status CHECK (status IN ('SCHEDULED', 'ONGOING', 'FINISHED', 'CANCELLED'))
+    CONSTRAINT ck_showing_status CHECK (status IN ('SCHEDULED', 'CANCELLED'))
 );
 
 CREATE INDEX idx_showing_date ON showing (show_date);
@@ -147,7 +139,7 @@ CREATE INDEX idx_showing_movie_date ON showing (movie_id, show_date);
 
 COMMENT ON TABLE showing IS '排片表：电影在特定影厅的放映场次';
 COMMENT ON COLUMN showing.base_price IS '基础票价，最终价格由定价规则计算得出';
-COMMENT ON COLUMN showing.status IS '场次状态：SCHEDULED-待放映，ONGOING-放映中，FINISHED-已结束，CANCELLED-已取消';
+COMMENT ON COLUMN showing.status IS '场次状态：SCHEDULED-待放映，CANCELLED-已取消';
 
 
 -- =============================================================

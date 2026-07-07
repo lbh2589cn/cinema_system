@@ -22,6 +22,18 @@ export function createShowingApi(data: { movieId: number; hallId: number; showDa
     return request.post('/api/showings', data)
 }
 
+export function updateShowingApi(id: number, data: { movieId?: number; hallId?: number; showDate?: string; showTime?: string; basePrice?: number }): Promise<Showing> {
+    return request.put(`/api/showings/${id}`, data)
+}
+
 export function cancelShowingApi(id: number): Promise<void> {
+    return request.post(`/api/showings/${id}/cancel`)
+}
+
+export function restoreShowingApi(id: number): Promise<void> {
+    return request.post(`/api/showings/${id}/restore`)
+}
+
+export function deleteShowingApi(id: number): Promise<void> {
     return request.delete(`/api/showings/${id}`)
 }
