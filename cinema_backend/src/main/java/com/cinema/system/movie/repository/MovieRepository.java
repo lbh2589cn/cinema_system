@@ -8,12 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
-    Page<Movie> findByStatus(String status, Pageable pageable);
-
     @Query("SELECT m FROM Movie m WHERE " +
            "(:keyword IS NULL OR m.title LIKE %:keyword%) AND " +
            "(:genre IS NULL OR m.genre LIKE %:genre%) AND " +
@@ -22,6 +18,4 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                              @Param("genre") String genre,
                              @Param("status") String status,
                              Pageable pageable);
-
-    List<Movie> findByStatusOrderByReleaseDateDesc(String status);
 }

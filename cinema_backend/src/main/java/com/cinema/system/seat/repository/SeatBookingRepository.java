@@ -33,6 +33,17 @@ public interface SeatBookingRepository extends JpaRepository<SeatBooking, Long> 
     List<SeatBooking> findByOrderId(Long orderId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE SeatBooking s SET s.status = 'AVAILABLE', s.lockedBy = null, s.lockedAt = null " +
+           "WHERE s.status = 'LOCKED' AND s.lockedAt < :expireTime")
+    int releaseExpiredLocks(@Param("expireTime") LocalDateTime expireTime);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE SeatBooking s SET s.status = 'AVAILABLE', s.lockedBy = null, s.lockedAt = null, " +
+           "s.bookedBy = null, s.bookedAt = null, s.orderId = null " +
+           "WHERE s.orderId IN :orderIds")
+    int batchReleaseSeatsByOrderIds(@Param("orderIds") List<Long> orderIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from SeatBooking s where s.seatId in :seatIds")
     void deleteBySeatIdIn(@Param("seatIds") Set<Long> seatIds);
 

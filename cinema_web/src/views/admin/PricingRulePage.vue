@@ -6,6 +6,7 @@
         </div>
         <el-card class="page-card">
             <el-table :data="rules" v-loading="loading" style="width: 100%">
+                <el-table-column prop="id" label="ID" width="80" />
                 <el-table-column prop="ruleName" label="规则名称" min-width="150" />
                 <el-table-column prop="ruleValue" label="规则值" width="100">
                     <template #default="{ row }">{{ row.ruleValue }}</template>

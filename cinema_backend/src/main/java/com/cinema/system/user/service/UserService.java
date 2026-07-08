@@ -25,7 +25,6 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
         if (request.getPhone() != null) user.setPhone(request.getPhone());
-        if (request.getNickname() != null) user.setNickname(request.getNickname());
         if (request.getUsername() != null) user.setUsername(request.getUsername());
         if (request.getIsMember() != null) user.setIsMember(request.getIsMember());
         userRepository.save(user);
@@ -54,7 +53,6 @@ public class UserService {
         resp.setUserId(user.getUserId());
         resp.setUsername(user.getUsername());
         resp.setPhone(user.getPhone());
-        resp.setNickname(user.getNickname());
         resp.setRole(user.getRole());
         resp.setIsMember(user.getIsMember());
         resp.setStatus(user.getStatus());

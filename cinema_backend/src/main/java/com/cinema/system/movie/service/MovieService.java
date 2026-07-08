@@ -24,9 +24,18 @@ public class MovieService {
 
     private final Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads", "images");
 
-    public PageResponse<Movie> listMovies(String keyword, String genre, String status, int page, int size) {
+    public PageResponse<Movie> listMovies(String keyword, String genre, String status,
+                                           int page, int size, String sortBy, String sortDir) {
+        Sort sort;
+        try {
+            sort = "desc".equalsIgnoreCase(sortDir)
+                    ? Sort.by(Sort.Direction.DESC, sortBy)
+                    : Sort.by(Sort.Direction.ASC, sortBy);
+        } catch (Exception e) {
+            sort = Sort.by("id").ascending();
+        }
         Page<Movie> moviePage = movieRepository.searchMovies(keyword, genre, status,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "releaseDate")));
+                PageRequest.of(page, size, sort));
         return PageResponse.of(moviePage.getContent(), page, size, moviePage.getTotalElements());
     }
 

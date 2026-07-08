@@ -21,6 +21,6 @@ public class HallSeat {
     @Column(name = "col_num", nullable = false)
     private Integer colNum;
 
-    @Column(name = "seat_type", nullable = false, length = 20)
-    private String seatType;
+    @Column(name = "status", nullable = false, length = 20)
+    private String status;
 }

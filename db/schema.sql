@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS `user` (
     username        VARCHAR(50)         NOT NULL COMMENT '用户昵称/显示名',
     password_hash   VARCHAR(255)        NOT NULL COMMENT 'BCrypt 加密后的密码',
     phone           VARCHAR(20)         COMMENT '手机号',
-    nickname        VARCHAR(50)         COMMENT '昵称（可选）',
     role            VARCHAR(10)         NOT NULL DEFAULT 'USER' COMMENT '角色: USER / ADMIN',
     is_member       BOOLEAN             NOT NULL DEFAULT FALSE COMMENT '是否会员',
     status          VARCHAR(10)         NOT NULL DEFAULT 'ACTIVE' COMMENT '状态: ACTIVE / DISABLED',
@@ -80,10 +79,9 @@ CREATE TABLE IF NOT EXISTS hall_seat (
     hall_id         BIGINT              NOT NULL COMMENT '所属影厅',
     row_num         INT                 NOT NULL COMMENT '行号（从 1 开始）',
     col_num         INT                 NOT NULL COMMENT '列号（从 1 开始）',
-    seat_type       VARCHAR(20)         NOT NULL DEFAULT 'STANDARD' COMMENT '座位类型',
-
+    status          VARCHAR(20)         NOT NULL DEFAULT 'STANDARD' COMMENT '座位状态',
     CONSTRAINT uk_hall_seat UNIQUE (hall_id, row_num, col_num),
-    CONSTRAINT ck_seat_type CHECK (seat_type IN ('STANDARD', 'VIP', 'WHEELCHAIR')),
+    CONSTRAINT ck_hall_seat_status CHECK (status IN ('STANDARD', 'VIP', 'UNAVAILABLE')),
     CONSTRAINT ck_hall_seat_row CHECK (row_num > 0),
     CONSTRAINT ck_hall_seat_col CHECK (col_num > 0)
 );

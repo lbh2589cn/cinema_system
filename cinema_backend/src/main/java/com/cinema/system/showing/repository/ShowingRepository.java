@@ -14,7 +14,6 @@ import java.util.List;
 @Repository
 public interface ShowingRepository extends JpaRepository<Showing, Long> {
     List<Showing> findByHallId(Long hallId);
-    List<Showing> findByMovieIdAndShowDateOrderByShowTimeAsc(Long movieId, LocalDate showDate);
 
     @Query("SELECT s FROM Showing s WHERE " +
            "s.status != 'CANCELLED' AND " +
@@ -27,11 +26,8 @@ public interface ShowingRepository extends JpaRepository<Showing, Long> {
 
     @Query("SELECT s FROM Showing s WHERE " +
            "(:movieId IS NULL OR s.movieId = :movieId) AND " +
-           "(:date IS NULL OR s.showDate = :date) " +
-           "ORDER BY s.showDate ASC, s.showTime ASC")
+           "(:date IS NULL OR s.showDate = :date)")
     Page<Showing> findShowingsPageable(@Param("movieId") Long movieId,
                                        @Param("date") LocalDate date,
                                        Pageable pageable);
-
-    List<Showing> findByShowDateAndStatus(LocalDate showDate, String status);
 }

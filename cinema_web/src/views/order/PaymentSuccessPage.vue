@@ -10,7 +10,6 @@
                 <el-button type="primary" @click="router.push(`/orders/${order?.id}`)">
                     查看订单
                 </el-button>
-                <el-button @click="router.push('/movies')">返回首页</el-button>
             </div>
         </el-card>
     </div>

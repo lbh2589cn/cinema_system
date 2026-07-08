@@ -35,11 +35,11 @@
             <el-divider v-if="order.payments && order.payments.length" />
             <h3 v-if="order.payments && order.payments.length">支付记录</h3>
             <el-table v-if="order.payments && order.payments.length" :data="order.payments" style="width: 100%; margin-top: 12px">
-                <el-table-column prop="paymentNo" label="流水号" width="180" />
+                <el-table-column prop="paymentNo" label="流水号" min-width="160" />
                 <el-table-column prop="amount" label="金额" width="100">
                     <template #default="{ row }">¥{{ row.amount.toFixed(2) }}</template>
                 </el-table-column>
-                <el-table-column prop="paymentMethod" label="支付方式" width="120">
+                <el-table-column prop="paymentMethod" label="支付方式" min-width="120">
                     <template #default="{ row }">{{ paymentMethodLabel(row.paymentMethod) }}</template>
                 </el-table-column>
                 <el-table-column prop="status" label="状态" width="100">
@@ -49,7 +49,7 @@
                         </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="paidAt" label="支付时间" width="180">
+                <el-table-column prop="paidAt" label="支付时间" min-width="160">
                     <template #default="{ row }">{{ row.paidAt || '-' }}</template>
                 </el-table-column>
             </el-table>

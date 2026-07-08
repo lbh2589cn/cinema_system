@@ -2,9 +2,7 @@ package com.cinema.system.order.scheduler;
 
 import com.cinema.system.order.entity.Order;
 import com.cinema.system.order.repository.OrderRepository;
-import com.cinema.system.payment.entity.Payment;
 import com.cinema.system.payment.repository.PaymentRepository;
-import com.cinema.system.seat.entity.SeatBooking;
 import com.cinema.system.seat.repository.SeatBookingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,47 +21,29 @@ public class OrderTimeoutScheduler {
     private final SeatBookingRepository seatBookingRepository;
     private final PaymentRepository paymentRepository;
 
+    private static final int BATCH_SIZE = 20;
+
     /**
      * 每10秒执行一次，取消创建超过3分钟仍未支付的订单并释放座位
      */
     @Scheduled(fixedDelay = 10000)
     @Transactional
     public void cancelExpiredOrders() {
-        List<Order> expiredOrders = orderRepository.findExpiredPendingOrders("PENDING");
+        List<Order> expiredOrders = orderRepository.findExpiredPendingOrdersBatch("PENDING", BATCH_SIZE);
 
         if (expiredOrders.isEmpty()) {
             return;
         }
 
-        log.info("发现 {} 个超时未支付订单，正在取消并释放座位", expiredOrders.size());
+        List<Long> orderIds = expiredOrders.stream()
+                .map(Order::getId)
+                .toList();
 
-        for (Order order : expiredOrders) {
-            try {
-                order.setStatus("CANCELLED");
-                orderRepository.save(order);
+        int cancelledCount = orderRepository.batchCancelOrders(orderIds);
+        int paymentCount = paymentRepository.batchFailPayments(orderIds);
+        int seatCount = seatBookingRepository.batchReleaseSeatsByOrderIds(orderIds);
 
-                // 同步更新支付记录为 FAILED
-                List<Payment> payments = paymentRepository.findByOrderIdAndStatus(order.getId(), "PENDING");
-                for (Payment payment : payments) {
-                    payment.setStatus("FAILED");
-                }
-                paymentRepository.saveAll(payments);
-
-                List<SeatBooking> bookings = seatBookingRepository.findByOrderId(order.getId());
-                for (SeatBooking booking : bookings) {
-                    booking.setStatus("AVAILABLE");
-                    booking.setLockedBy(null);
-                    booking.setLockedAt(null);
-                    booking.setBookedBy(null);
-                    booking.setBookedAt(null);
-                    booking.setOrderId(null);
-                }
-                seatBookingRepository.saveAll(bookings);
-
-                log.info("订单 {} 已取消，释放 {} 个座位", order.getOrderNo(), bookings.size());
-            } catch (Exception e) {
-                log.error("取消订单 {} 时发生异常", order.getOrderNo(), e);
-            }
-        }
+        log.info("批量取消 {} 个超时未支付订单，更新 {} 条支付记录为FAILED，释放 {} 个座位",
+                cancelledCount, paymentCount, seatCount);
     }
 }

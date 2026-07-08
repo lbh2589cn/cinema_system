@@ -4,6 +4,7 @@ import com.cinema.system.order.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,8 +22,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o ORDER BY o.createdAt DESC")
     Page<Order> findAllOrderByCreatedAtDesc(Pageable pageable);
 
-    List<Order> findByUserId(Long userId);
+    @Query(value = "SELECT * FROM `order` WHERE status = :status AND created_at < DATE_SUB(NOW(), INTERVAL 3 MINUTE) LIMIT :limit", nativeQuery = true)
+    List<Order> findExpiredPendingOrdersBatch(@Param("status") String status, @Param("limit") int limit);
 
-    @Query(value = "SELECT * FROM `order` WHERE status = :status AND created_at < DATE_SUB(NOW(), INTERVAL 3 MINUTE)", nativeQuery = true)
-    List<Order> findExpiredPendingOrders(@Param("status") String status);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Order o SET o.status = 'CANCELLED' WHERE o.id IN :ids AND o.status = 'PENDING'")
+    int batchCancelOrders(@Param("ids") List<Long> ids);
 }

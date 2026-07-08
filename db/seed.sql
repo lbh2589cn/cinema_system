@@ -2,14 +2,14 @@
 -- 1. 用户
 --    密码均为 "123456" 的 BCrypt 哈希
 -- =============================================================
-INSERT INTO `user` (user_id, username, password_hash, phone, nickname, role, is_member, `status`)
+INSERT INTO `user` (user_id, username, password_hash, phone, role, is_member, `status`)
 VALUES
-    ('admin',     'Admin',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000000', '管理员', 'ADMIN', TRUE,  'ACTIVE'),
-    ('alice',     'Alice',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000001', '爱丽丝', 'USER',  TRUE,  'ACTIVE'),
-    ('bob',       'Bob',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000002', '鲍勃',   'USER',  FALSE, 'ACTIVE'),
-    ('charlie',   'Charlie',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000003', '查理',   'USER',  TRUE,  'ACTIVE'),
-    ('diana',     'Diana',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000004', '戴安娜', 'USER',  FALSE, 'ACTIVE'),
-    ('eve',       'Eve',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000005', '小伊',   'USER',  TRUE,  'ACTIVE');
+    ('admin',     'Admin',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000000', 'ADMIN', TRUE,  'ACTIVE'),
+    ('alice',     'Alice',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000001', 'USER',  TRUE,  'ACTIVE'),
+    ('bob',       'Bob',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000002', 'USER',  FALSE, 'ACTIVE'),
+    ('charlie',   'Charlie',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000003', 'USER',  TRUE,  'ACTIVE'),
+    ('diana',     'Diana',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000004', 'USER',  FALSE, 'ACTIVE'),
+    ('eve',       'Eve',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000005', 'USER',  TRUE,  'ACTIVE');
 
 -- =============================================================
 -- 2. 影厅
@@ -25,7 +25,7 @@ VALUES
 -- =============================================================
 
 -- Standard 厅：8行×12列
-INSERT INTO hall_seat (hall_id, row_num, col_num, seat_type)
+INSERT INTO hall_seat (hall_id, row_num, col_num, status)
 WITH RECURSIVE rows_gen(n) AS (
     SELECT 1 UNION ALL SELECT n + 1 FROM rows_gen WHERE n < 8
 ),
@@ -36,7 +36,7 @@ SELECT 1, r.n, c.n, 'STANDARD'
 FROM rows_gen r, cols_gen c;
 
 -- IMAX 厅：15行×20列，中间区域设为 VIP 座（第6-10行, 第7-14列）
-INSERT INTO hall_seat (hall_id, row_num, col_num, seat_type)
+INSERT INTO hall_seat (hall_id, row_num, col_num, status)
 WITH RECURSIVE rows_gen(n) AS (
     SELECT 1 UNION ALL SELECT n + 1 FROM rows_gen WHERE n < 15
 ),
@@ -48,7 +48,7 @@ SELECT 2, r.n, c.n,
 FROM rows_gen r, cols_gen c;
 
 -- VIP 厅：4行×5列，全部 VIP
-INSERT INTO hall_seat (hall_id, row_num, col_num, seat_type)
+INSERT INTO hall_seat (hall_id, row_num, col_num, status)
 WITH RECURSIVE rows_gen(n) AS (
     SELECT 1 UNION ALL SELECT n + 1 FROM rows_gen WHERE n < 4
 ),

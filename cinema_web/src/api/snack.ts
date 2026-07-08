@@ -13,10 +13,6 @@ export function getSnacksApi(): Promise<Snack[]> {
     return request.get('/api/snacks')
 }
 
-export function getAllSnacksApi(): Promise<Snack[]> {
-    return request.get('/api/snacks/all')
-}
-
 export function createSnackApi(data: { name: string; price: number; imageUrl?: string; stock: number }): Promise<Snack> {
     return request.post('/api/snacks', data)
 }

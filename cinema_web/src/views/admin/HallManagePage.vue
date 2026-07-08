@@ -5,21 +5,25 @@
             <el-button type="primary" @click="openCreate">新增影厅</el-button>
         </div>
 
-        <div class="hall-grid" v-loading="loading">
-            <el-card v-for="hall in halls" :key="hall.id" class="hall-card" shadow="hover">
-                <h3>{{ hall.name }}</h3>
-                <div class="hall-info">
-                    <p>{{ hall.rows }} 行 × {{ hall.cols }} 列</p>
-                    <p>共 {{ hall.seatCount }} 个座位</p>
-                    <p v-if="hall.description" class="desc">{{ hall.description }}</p>
-                </div>
-                <div class="hall-actions">
-                    <el-button text type="primary" @click="viewSeats(hall)">查看座位</el-button>
-                    <el-button text type="warning" @click="openEdit(hall)">编辑</el-button>
-                    <el-button text type="danger" @click="handleDelete(hall)">删除</el-button>
-                </div>
-            </el-card>
-        </div>
+        <el-card class="page-card">
+            <el-table :data="halls" v-loading="loading" style="width: 100%">
+                <el-table-column prop="id" label="ID" width="80" />
+                <el-table-column prop="name" label="名称" min-width="150" />
+                <el-table-column prop="rows" label="行数" width="80" />
+                <el-table-column prop="cols" label="列数" width="80" />
+                <el-table-column prop="seatCount" label="座位数" width="80" />
+                <el-table-column prop="description" label="描述" min-width="200">
+                    <template #default="{ row }">{{ row.description || '-' }}</template>
+                </el-table-column>
+                <el-table-column label="操作" width="280">
+                    <template #default="{ row }">
+                        <el-button text type="primary" @click="viewSeats(row)">查看座位</el-button>
+                        <el-button text type="warning" @click="openEdit(row)">编辑</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
 
         <div class="pagination-wrapper" v-if="total > 0">
             <el-pagination
@@ -47,18 +51,26 @@
                         <div class="screen-label">银幕</div>
                         <div class="screen-line"></div>
                         <div class="seat-grid-preview" :style="{ gridTemplateColumns: `repeat(${form.cols}, minmax(36px, 1fr))` }">
-                            <div v-for="seat in editSeats" :key="`${seat.rowNum}-${seat.colNum}`"
-                                 class="mini-seat" :class="seat.seatType.toLowerCase()"
-                                 @click="toggleSeatType(seat.rowNum, seat.colNum)"
-                                 :title="'点击切换'">
-                                {{ seat.rowNum }}-{{ seat.colNum }}
-                             </div>
-                         </div>
-                         <p class="seat-legend">
-                             <span class="mini-seat standard">标准座</span>
-                             <span class="mini-seat vip">VIP座</span>
-                         </p>
-                         <p class="seat-tip">* 点击切换座位类型（标准座 / VIP座）</p>
+                            <el-dropdown v-for="seat in editSeats" :key="`${seat.rowNum}-${seat.colNum}`"
+                                         trigger="click" @command="(cmd: string) => seat.status = cmd">
+                                <div class="mini-seat" :class="seat.status.toLowerCase()">
+                                    {{ seat.rowNum }}-{{ seat.colNum }}
+                                </div>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item command="STANDARD">标准座</el-dropdown-item>
+                                        <el-dropdown-item command="VIP">VIP座</el-dropdown-item>
+                                        <el-dropdown-item command="UNAVAILABLE">不可用</el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                        <div class="seat-legend">
+                            <div class="legend-item"><span class="legend-dot standard"></span>标准座</div>
+                            <div class="legend-item"><span class="legend-dot vip"></span>VIP座</div>
+                            <div class="legend-item"><span class="legend-dot unavailable"></span>不可用</div>
+                        </div>
+                         <p class="seat-tip">* 点击座位可选择状态</p>
                      </div>
                  </el-form-item>
                  <el-form-item label="描述" prop="description">
@@ -76,14 +88,15 @@
                 <div class="screen-label">银幕</div>
                 <div class="screen-line"></div>
                 <div class="seat-grid-preview" :style="{ gridTemplateColumns: `repeat(${selectedHall.cols}, minmax(36px, 1fr))` }">
-                    <div v-for="seat in hallSeats" :key="seat.id" class="mini-seat" :class="seat.seatType.toLowerCase()">
+                    <div v-for="seat in hallSeats" :key="seat.id" class="mini-seat" :class="seat.status.toLowerCase()">
                         {{ seat.rowNum }}-{{ seat.colNum }}
                     </div>
                 </div>
-                <p class="seat-legend">
-                    <span class="mini-seat standard">标准座</span>
-                    <span class="mini-seat vip">VIP座</span>
-                </p>
+                <div class="seat-legend">
+                    <div class="legend-item"><span class="legend-dot standard"></span>标准座</div>
+                    <div class="legend-item"><span class="legend-dot vip"></span>VIP座</div>
+                    <div class="legend-item"><span class="legend-dot unavailable"></span>不可用</div>
+                </div>
             </div>
             <template #footer>
                 <el-button @click="showSeatsDialog = false">关闭</el-button>
@@ -153,7 +166,7 @@ function generateSeats(rows: number, cols: number) {
     const seats: HallSeat[] = []
     for (let r = 1; r <= rows; r++) {
         for (let c = 1; c <= cols; c++) {
-            seats.push({ id: 0, hallId: 0, rowNum: r, colNum: c, seatType: 'STANDARD' })
+            seats.push({ id: 0, hallId: 0, rowNum: r, colNum: c, status: 'STANDARD' })
         }
     }
     return seats
@@ -183,12 +196,6 @@ watch([() => form.rows, () => form.cols], ([rows, cols]) => {
     }
 })
 
-function toggleSeatType(rowNum: number, colNum: number) {
-    const seat = editSeats.value.find(s => s.rowNum === rowNum && s.colNum === colNum)
-    if (seat) {
-        seat.seatType = seat.seatType === 'STANDARD' ? 'VIP' : 'STANDARD'
-    }
-}
 
 async function viewSeats(hall: Hall) {
     selectedHall.value = hall
@@ -203,8 +210,7 @@ async function handleSave() {
     saving.value = true
     try {
         const changes: SeatTypeUpdate[] = editSeats.value
-            .filter(s => s.seatType !== 'STANDARD')
-            .map(s => ({ rowNum: s.rowNum, colNum: s.colNum, seatType: s.seatType }))
+            .map(s => ({ rowNum: s.rowNum, colNum: s.colNum, status: s.status }))
         const payload = { ...form, seats: changes.length > 0 ? changes : undefined }
         if (isEdit.value && editId.value) {
             await updateHallApi(editId.value, payload)
@@ -247,39 +253,6 @@ onMounted(loadHalls)
     font-size: 20px;
 }
 
-.hall-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.hall-card {
-    h3 {
-        font-size: 18px;
-        margin-bottom: 12px;
-    }
-
-    .hall-info {
-        color: #606266;
-        font-size: 14px;
-        margin-bottom: 12px;
-
-        p {
-            margin-bottom: 4px;
-        }
-
-        .desc {
-            color: #909399;
-            font-size: 13px;
-        }
-    }
-
-    .hall-actions {
-        display: flex;
-        gap: 8px;
-    }
-}
-
 .seat-layout {
     display: flex;
     flex-direction: column;
@@ -308,10 +281,15 @@ onMounted(loadHalls)
     max-width: 100%;
     overflow-x: auto;
     padding: 4px;
+
+    .el-dropdown {
+        width: 100%;
+    }
 }
 
 .mini-seat {
     height: 24px;
+    width: 100%;
     padding: 0 2px;
     font-size: 10px;
     line-height: 24px;
@@ -320,7 +298,6 @@ onMounted(loadHalls)
     color: #67c23a;
     border: 1px solid #b3e0b3;
     text-align: center;
-    cursor: pointer;
     overflow: hidden;
 
     &.vip {
@@ -329,13 +306,49 @@ onMounted(loadHalls)
         border-color: #f5dab1;
         border-style: dashed;
     }
+
+    &.unavailable {
+        background: #fef0f0;
+        color: #f56c6c;
+        border-color: #fbc4c4;
+    }
 }
 
 .seat-legend {
     display: flex;
-    gap: 16px;
+    gap: 20px;
     font-size: 13px;
-    color: #909399;
+    color: #606266;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid;
+
+    &.standard {
+        background: #e8f4e8;
+        border-color: #b3e0b3;
+    }
+
+    &.vip {
+        background: #fdf6ec;
+        border-color: #f5dab1;
+        border-style: dashed;
+    }
+
+    &.unavailable {
+        background: #fef0f0;
+        border-color: #fbc4c4;
+    }
 }
 
 .seat-edit-area {

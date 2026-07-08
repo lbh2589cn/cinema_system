@@ -54,7 +54,7 @@ public class AdminController {
     public ApiResponse<PageResponse<User>> listUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<User> userPage = userRepository.findAll(PageRequest.of(page, size));
+        Page<User> userPage = userRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
         return ApiResponse.success(PageResponse.of(userPage.getContent(), page, size, userPage.getTotalElements()));
     }
 
@@ -86,7 +86,7 @@ public class AdminController {
     public ApiResponse<PageResponse<Order>> listOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Order> orderPage = orderRepository.findAllOrderByCreatedAtDesc(PageRequest.of(page, size));
+        Page<Order> orderPage = orderRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
         return ApiResponse.success(PageResponse.of(orderPage.getContent(), page, size, orderPage.getTotalElements()));
     }
 
@@ -94,7 +94,7 @@ public class AdminController {
     public ApiResponse<PageResponse<Map<String, Object>>> listPayments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Payment> paymentPage = paymentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+        Page<Payment> paymentPage = paymentRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
         List<Map<String, Object>> list = paymentPage.getContent().stream().map(p -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", p.getId());
@@ -119,7 +119,7 @@ public class AdminController {
     public ApiResponse<PageResponse<Hall>> listHalls(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Hall> hallPage = hallRepository.findAll(PageRequest.of(page, size));
+        Page<Hall> hallPage = hallRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
         return ApiResponse.success(PageResponse.of(hallPage.getContent(), page, size, hallPage.getTotalElements()));
     }
 
@@ -127,7 +127,7 @@ public class AdminController {
     public ApiResponse<PageResponse<Snack>> listSnacks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Snack> snackPage = snackRepository.findAll(PageRequest.of(page, size));
+        Page<Snack> snackPage = snackRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
         return ApiResponse.success(PageResponse.of(snackPage.getContent(), page, size, snackPage.getTotalElements()));
     }
 
@@ -136,7 +136,7 @@ public class AdminController {
             @RequestParam(required = false) LocalDate date,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Showing> showingPage = showingRepository.findShowingsPageable(null, date, PageRequest.of(page, size));
+        Page<Showing> showingPage = showingRepository.findShowingsPageable(null, date, PageRequest.of(page, size, Sort.by("id").ascending()));
         return ApiResponse.success(PageResponse.of(showingPage.getContent(), page, size, showingPage.getTotalElements()));
     }
 
@@ -144,7 +144,7 @@ public class AdminController {
     public ApiResponse<PageResponse<PricingRule>> listPricingRules(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<PricingRule> rulePage = pricingRuleRepository.findAll(PageRequest.of(page, size, Sort.by("priority").ascending()));
+        Page<PricingRule> rulePage = pricingRuleRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
         return ApiResponse.success(PageResponse.of(rulePage.getContent(), page, size, rulePage.getTotalElements()));
     }
 

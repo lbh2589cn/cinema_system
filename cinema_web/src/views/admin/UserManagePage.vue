@@ -6,7 +6,6 @@
                 <el-table-column prop="id" label="ID" width="80" />
                 <el-table-column prop="userId" label="账号" width="120" />
                 <el-table-column prop="username" label="用户名" width="150" />
-                <el-table-column prop="nickname" label="昵称" width="120" />
                 <el-table-column prop="phone" label="手机号" width="130" />
                 <el-table-column prop="role" label="角色" width="100">
                     <template #default="{ row }">

@@ -6,5 +6,5 @@ import lombok.Data;
 public class SeatTypeUpdate {
     private Integer rowNum;
     private Integer colNum;
-    private String seatType;
+    private String status;
 }

@@ -11,5 +11,5 @@ public class LoginResponse {
     private String userId;
     private String username;
     private String role;
-    private String nickname;
+    private Boolean isMember;
 }

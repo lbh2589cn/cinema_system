@@ -14,6 +14,10 @@
                     <el-option label="奇幻" value="Fantasy" />
                     <el-option label="喜剧" value="Comedy" />
                 </el-select>
+                <el-select v-model="sortBy" style="width: 200px" @change="search">
+                    <el-option label="上映时间（新→旧）" value="releaseDate_desc" />
+                    <el-option label="评分（高→低）" value="rating_desc" />
+                </el-select>
             </div>
             <div class="movie-grid" v-loading="loading">
                 <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" />
@@ -39,6 +43,7 @@ import type { Movie } from '@/api/movie'
 const movies = ref<Movie[]>([])
 const keyword = ref('')
 const genre = ref('')
+const sortBy = ref('releaseDate_desc')
 const page = ref(1)
 const size = ref(20)
 const total = ref(0)
@@ -53,6 +58,8 @@ async function loadMovies() {
             status: 'ON',
             page: page.value - 1,
             size: size.value,
+            sortBy: sortBy.value.split('_')[0],
+            sortDir: sortBy.value.split('_')[1],
         })
         movies.value = result.content
         total.value = result.total

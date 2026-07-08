@@ -56,7 +56,7 @@
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { Coin, DataAnalysis, Film, Food, List, Money, OfficeBuilding, Timer, User } from '@element-plus/icons-vue';
-import { transferCheckedChangeFn } from 'element-plus';
+
 
 const route = useRoute()
 const appStore = useAppStore()

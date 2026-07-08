@@ -14,13 +14,13 @@ export interface HallSeat {
     hallId: number
     rowNum: number
     colNum: number
-    seatType: string
+    status: string
 }
 
 export interface SeatTypeUpdate {
     rowNum: number
     colNum: number
-    seatType: string
+    status: string
 }
 
 export function getHallsApi(): Promise<Hall[]> {

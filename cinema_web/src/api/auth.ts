@@ -11,7 +11,7 @@ export interface LoginResponse {
     userId: string
     username: string
     role: string
-    nickname: string
+    isMember: boolean
 }
 
 export interface UserProfile {
@@ -19,7 +19,6 @@ export interface UserProfile {
     userId: string
     username: string
     phone: string
-    nickname: string
     role: string
     isMember: boolean
     status: string
@@ -30,7 +29,6 @@ export interface RegisterRequest {
     username: string
     password: string
     phone?: string
-    nickname?: string
 }
 
 export function loginApi(data: LoginRequest): Promise<LoginResponse> {

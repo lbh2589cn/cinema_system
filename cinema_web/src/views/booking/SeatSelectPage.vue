@@ -12,6 +12,7 @@
                 :seats="seats"
                 :selected-ids="selectedIds"
                 :cols="maxCols"
+                :is-member="userStore.userInfo?.isMember ?? false"
                 @select="toggleSeat"
             />
             <div class="actions" v-if="selectedIds.size > 0">
@@ -31,12 +32,14 @@ import { ElMessage } from 'element-plus'
 import { getSeatsApi, lockSeatsApi, unlockSeatsApi } from '@/api/seat'
 import { getShowingApi } from '@/api/showing'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import type { SeatStatus } from '@/api/seat'
 import type { Showing } from '@/api/showing'
 
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const userStore = useUserStore()
 
 const seats = ref<SeatStatus[]>([])
 const selectedIds = ref(new Set<number>())

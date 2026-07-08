@@ -18,7 +18,7 @@
                 <el-dropdown trigger="click">
                     <span class="user-info">
                         <el-avatar :size="32" icon="UserFilled" />
-                        <span class="username">{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</span>
+                        <span class="username">{{ userStore.userInfo?.username }}</span>
                     </span>
                     <template #dropdown>
                         <el-dropdown-menu>

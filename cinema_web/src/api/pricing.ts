@@ -30,6 +30,10 @@ export function createPricingRuleApi(data: Omit<PricingRule, 'id' | 'priority'>)
     return request.post('/api/pricing-rules', data)
 }
 
+export function deletePricingRuleApi(id: number): Promise<void> {
+    return request.delete(`/api/pricing-rules/${id}`)
+}
+
 export interface DiscountItem {
     ruleName: string
     description: string

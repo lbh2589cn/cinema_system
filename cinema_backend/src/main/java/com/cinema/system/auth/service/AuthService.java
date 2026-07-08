@@ -28,7 +28,6 @@ public class AuthService {
         user.setUsername(request.getUsername());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
-        user.setNickname(request.getNickname());
         user.setRole("USER");
         user.setIsMember(false);
         user.setStatus("ACTIVE");
@@ -49,6 +48,6 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getId(), user.getRole());
         return new LoginResponse(token, user.getId(), user.getUserId(),
-                user.getUsername(), user.getRole(), user.getNickname());
+                user.getUsername(), user.getRole(), user.getIsMember());
     }
 }

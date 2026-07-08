@@ -23,8 +23,10 @@ public class MovieController {
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.success(movieService.listMovies(keyword, genre, status, page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        return ApiResponse.success(movieService.listMovies(keyword, genre, status, page, size, sortBy, sortDir));
     }
 
     @GetMapping("/{id}")

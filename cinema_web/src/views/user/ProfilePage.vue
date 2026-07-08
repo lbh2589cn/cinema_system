@@ -7,21 +7,7 @@
 
             <el-descriptions :column="1" border>
                 <el-descriptions-item label="账号">
-                    <div class="desc-content">
-                        <template v-if="editingKey === 'userId'">
-                            <el-input v-model="editValue" size="small" :style="{ width: Math.max(120, editValue.length * 14 + 32) + 'px' }" class="dynamic-input" />
-                            <span class="btn-group">
-                                <el-button type="primary" size="small" @click="saveEdit('userId')" :loading="saving">保存</el-button>
-                                <el-button size="small" @click="cancelEdit">取消</el-button>
-                            </span>
-                        </template>
-                        <template v-else>
-                            <span>{{ profile.userId }}</span>
-                            <el-button type="primary" size="small" @click="startEdit('userId')">
-                                <el-icon><Edit /></el-icon>
-                            </el-button>
-                        </template>
-                    </div>
+                    {{ profile.userId }}
                 </el-descriptions-item>
                 <el-descriptions-item label="用户名">
                     <div class="desc-content">
@@ -35,23 +21,6 @@
                         <template v-else>
                             <span>{{ profile.username }}</span>
                             <el-button type="primary" size="small" @click="startEdit('username')">
-                                <el-icon><Edit /></el-icon>
-                            </el-button>
-                        </template>
-                    </div>
-                </el-descriptions-item>
-                <el-descriptions-item label="昵称">
-                    <div class="desc-content">
-                        <template v-if="editingKey === 'nickname'">
-                            <el-input v-model="editValue" size="small" :style="{ width: Math.max(120, editValue.length * 14 + 32) + 'px' }" class="dynamic-input" />
-                            <span class="btn-group">
-                                <el-button type="primary" size="small" @click="saveEdit('nickname')" :loading="saving">保存</el-button>
-                                <el-button size="small" @click="cancelEdit">取消</el-button>
-                            </span>
-                        </template>
-                        <template v-else>
-                            <span>{{ profile.nickname || '-' }}</span>
-                            <el-button type="primary" size="small" @click="startEdit('nickname')">
                                 <el-icon><Edit /></el-icon>
                             </el-button>
                         </template>

@@ -25,7 +25,7 @@ export interface MovieCreateRequest {
     status?: string
 }
 
-export function getMoviesApi(params?: { keyword?: string; genre?: string; status?: string; page?: number; size?: number }): Promise<{ content: Movie[]; total: number }> {
+export function getMoviesApi(params?: { keyword?: string; genre?: string; status?: string; page?: number; size?: number; sortBy?: string; sortDir?: string }): Promise<{ content: Movie[]; total: number }> {
     return request.get('/api/movies', { params })
 }
 

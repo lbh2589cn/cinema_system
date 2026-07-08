@@ -24,10 +24,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { getDashboardApi, type DashboardStats } from '@/api/admin'
 
-const router = useRouter()
 const loading = ref(false)
 const stats = ref<DashboardStats>({ totalUsers: 0 })
 

@@ -24,9 +24,6 @@ public class User {
     @Column(length = 20)
     private String phone;
 
-    @Column(length = 50)
-    private String nickname;
-
     @Column(nullable = false, length = 10)
     private String role;
 

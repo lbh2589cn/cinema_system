@@ -60,7 +60,7 @@ public class HallService {
                 seat.setHallId(hall.getId());
                 seat.setRowNum(r);
                 seat.setColNum(c);
-                seat.setSeatType("STANDARD");
+                seat.setStatus("STANDARD");
                 hallSeatRepository.save(seat);
             }
         }
@@ -73,8 +73,8 @@ public class HallService {
                         .filter(s -> s.getRowNum().equals(seat.getRowNum()) && s.getColNum().equals(seat.getColNum()))
                         .findFirst()
                         .ifPresent(s -> {
-                            if (!seat.getSeatType().equals(s.getSeatType())) {
-                                seat.setSeatType(s.getSeatType());
+                            if (!seat.getStatus().equals(s.getStatus())) {
+                                seat.setStatus(s.getStatus());
                                 hallSeatRepository.save(seat);
                             }
                         });
@@ -107,28 +107,26 @@ public class HallService {
                 oldSeatMap.put(s.getRowNum() + "," + s.getColNum(), s);
             }
 
-            Set<Long> keptIds = new java.util.HashSet<>();
             List<HallSeat> addedSeats = new java.util.ArrayList<>();
 
             for (int r = 1; r <= request.getRows(); r++) {
                 for (int c = 1; c <= request.getCols(); c++) {
                     String key = r + "," + c;
-                    HallSeat old = oldSeatMap.remove(key); // remove = 匹配到的从 map 中移除，剩下的是待删除的
+                    HallSeat old = oldSeatMap.remove(key);
                     if (old != null) {
-                        keptIds.add(old.getId());
                     } else {
                         HallSeat seat = new HallSeat();
                         seat.setHallId(hall.getId());
                         seat.setRowNum(r);
                         seat.setColNum(c);
-                        seat.setSeatType("STANDARD");
+                        seat.setStatus("STANDARD");
                         addedSeats.add(hallSeatRepository.save(seat));
                     }
                 }
             }
 
             // 删除不再存在的旧座位
-            Set<Long> removedIds = oldSeatMap.values().stream().map(HallSeat::getId).collect(Collectors.toSet());
+            Set<Long> removedIds = oldSeatMap.values().stream().map(HallSeat::getId).collect(java.util.stream.Collectors.toSet());
             if (!removedIds.isEmpty()) {
                 hallSeatRepository.deleteBySeatIdIn(removedIds);
                 // 同步清理这些座位在各场次中的预订记录
@@ -160,8 +158,8 @@ public class HallService {
                         .filter(s -> s.getRowNum().equals(seat.getRowNum()) && s.getColNum().equals(seat.getColNum()))
                         .findFirst()
                         .ifPresent(s -> {
-                            if (!seat.getSeatType().equals(s.getSeatType())) {
-                                seat.setSeatType(s.getSeatType());
+                            if (!seat.getStatus().equals(s.getStatus())) {
+                                seat.setStatus(s.getStatus());
                                 hallSeatRepository.save(seat);
                             }
                         });

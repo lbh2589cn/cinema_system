@@ -6,6 +6,7 @@
             </template>
 
             <el-table :data="payments" style="width: 100%">
+                <el-table-column prop="id" label="ID" width="80" />
                 <el-table-column prop="paymentNo" label="流水号" width="180" />
                 <el-table-column prop="orderNo" label="订单号" width="180" />
                 <el-table-column prop="userId" label="用户ID" width="80" />

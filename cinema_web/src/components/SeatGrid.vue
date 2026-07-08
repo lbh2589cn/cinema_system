@@ -10,11 +10,16 @@
                 :class="[
                     seat.status === 'AVAILABLE' ? 'available' : seat.status === 'LOCKED' ? 'locked' : 'booked',
                     selectedIds.has(seat.id) ? 'selected' : '',
-                    seat.seatType === 'VIP' ? 'vip' : '',
+                    seat.seatType === 'UNAVAILABLE' ? 'unavailable' : '',
+                    isVipRestricted(seat) ? 'vip-restricted' : '',
                 ]"
-                @click="toggleSeat(seat)"
+                @click="handleSeatClick(seat)"
             >
                 <el-icon v-if="seat.status === 'BOOKED'" :size="16"><Lock /></el-icon>
+                <span v-else-if="seat.seatType === 'UNAVAILABLE'" style="font-size: 14px; font-weight: bold;">✕</span>
+                <span v-else-if="isVipRestricted(seat)">
+                    <el-icon :size="14"><WarningFilled /></el-icon>
+                </span>
                 <span v-else>{{ seat.rowNum }}-{{ seat.colNum }}</span>
             </div>
         </div>
@@ -22,19 +27,24 @@
             <div class="legend-item"><span class="legend-dot available"></span>可选</div>
             <div class="legend-item"><span class="legend-dot selected"></span>已选</div>
             <div class="legend-item"><span class="legend-dot locked"></span>已锁定</div>
-            <div class="legend-item"><span class="legend-dot booked"></span>已售出</div>
+            <div class="legend-item"><span class="legend-dot booked-dot"></span>已售出</div>
+            <div class="legend-item"><span class="legend-dot vip-restricted-dot"></span>会员专享</div>
+            <div class="legend-item"><span class="legend-dot unavailable-dot"></span>不可用</div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { WarningFilled } from '@element-plus/icons-vue'
 import type { SeatStatus } from '@/api/seat'
 
 const props = defineProps<{
     seats: SeatStatus[]
     selectedIds: Set<number>
     cols: number
+    isMember: boolean
 }>()
 
 const emit = defineEmits<{
@@ -45,11 +55,22 @@ const gridStyle = computed(() => ({
     gridTemplateColumns: `repeat(${props.cols}, 40px)`,
 }))
 
-function toggleSeat(seat: SeatStatus) {
-    if (seat.status === 'AVAILABLE') {
+function isVipRestricted(seat: SeatStatus): boolean {
+    return seat.seatType === 'VIP' && !props.isMember
+}
+
+function handleSeatClick(seat: SeatStatus) {
+    if (seat.seatType === 'UNAVAILABLE') {
+        ElMessage.warning('该座位已暂停使用')
+        return
+    }
+    if (isVipRestricted(seat)) {
+        ElMessage.warning('该座位仅限会员选购，请升级为会员')
+        return
+    }
+    if (props.selectedIds.has(seat.id)) {
         emit('select', seat)
-    } else if (seat.status === 'LOCKED' && props.selectedIds.has(seat.id)) {
-        // 已选中的锁定座位允许取消选择
+    } else if (seat.status === 'AVAILABLE') {
         emit('select', seat)
     }
 }
@@ -109,10 +130,16 @@ function toggleSeat(seat: SeatStatus) {
     }
 
     &.locked {
-        background: #fdf6ec;
-        color: #e6a23c;
-        border: 1px solid #f5dab1;
+        background: #eef1f6;
+        color: #909399;
+        border: 1px solid #d3d9e4;
         cursor: not-allowed;
+
+        &:hover {
+            background: #eef1f6;
+            color: #909399;
+            border-color: #d3d9e4;
+        }
     }
 
     &.booked {
@@ -120,6 +147,12 @@ function toggleSeat(seat: SeatStatus) {
         color: #c0c4cc;
         border: 1px solid #e4e7ed;
         cursor: not-allowed;
+
+        &:hover {
+            background: #f0f0f0;
+            color: #c0c4cc;
+            border-color: #e4e7ed;
+        }
     }
 
     &.selected {
@@ -127,10 +160,39 @@ function toggleSeat(seat: SeatStatus) {
         color: #fff;
         border-color: #409eff;
         cursor: pointer;
+
+        &:hover {
+            background: #409eff;
+            color: #fff;
+            border-color: #409eff;
+        }
     }
 
-    &.vip {
-        border-style: dashed;
+    &.unavailable {
+        background: #fef0f0;
+        color: #f56c6c;
+        border-color: #fbc4c4;
+        cursor: not-allowed;
+
+        &:hover {
+            background: #fef0f0;
+            color: #f56c6c;
+            border-color: #fbc4c4;
+        }
+    }
+
+    &.vip-restricted {
+        &.available {
+            background: #fef6e7;
+            color: #e6a23c;
+            border-color: #f5dab1;
+            cursor: not-allowed;
+
+            &:hover {
+                background: #fef0d5;
+                color: #d4880f;
+            }
+        }
     }
 }
 
@@ -164,13 +226,23 @@ function toggleSeat(seat: SeatStatus) {
         }
 
         &.locked {
-            background: #fdf6ec;
+            background: #eef1f6;
+            border-color: #d3d9e4;
+        }
+
+        &.booked-dot {
+            background: #f0f0f0;
+            border-color: #e4e7ed;
+        }
+
+        &.vip-restricted-dot {
+            background: #fef6e7;
             border-color: #f5dab1;
         }
 
-        &.booked {
-            background: #f0f0f0;
-            border-color: #e4e7ed;
+        &.unavailable-dot {
+            background: #fef0f0;
+            border-color: #fbc4c4;
         }
     }
 }

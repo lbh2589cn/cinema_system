@@ -4,6 +4,7 @@ import com.cinema.system.payment.entity.Payment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,4 +23,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     BigDecimal sumAmountByStatus(@Param("status") String status);
 
     Page<Payment> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Payment p SET p.status = 'FAILED' WHERE p.orderId IN :orderIds AND p.status = 'PENDING'")
+    int batchFailPayments(@Param("orderIds") List<Long> orderIds);
 }
