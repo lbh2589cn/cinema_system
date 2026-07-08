@@ -9,19 +9,17 @@
                 <div class="amount">应付金额：¥{{ order.finalAmount.toFixed(2) }}</div>
             </div>
             <el-divider />
-            <h3>选择支付方式</h3>
-            <div class="payment-methods">
-                <el-radio-group v-model="paymentMethod">
-                    <el-radio value="WECHAT" class="payment-method">
-                        <el-icon><Iphone /></el-icon>
-                        微信支付
-                    </el-radio>
-                    <el-radio value="ALIPAY" class="payment-method">
-                        <el-icon><Wallet /></el-icon>
-                        支付宝
-                    </el-radio>
-                </el-radio-group>
-            </div>
+            <h3 class="pay-title">— 选择支付方式 —</h3>
+            <el-radio-group v-model="paymentMethod" class="payment-methods">
+                <el-radio value="WECHAT" class="payment-method" border>
+                    <el-icon><Iphone /></el-icon>
+                    微信支付
+                </el-radio>
+                <el-radio value="ALIPAY" class="payment-method" border>
+                    <el-icon><Wallet /></el-icon>
+                    支付宝
+                </el-radio>
+            </el-radio-group>
             <div class="actions">
                 <el-button type="primary" size="large" @click="handlePay" :loading="paying">
                     确认支付 ¥{{ order?.finalAmount.toFixed(2) }}
@@ -91,20 +89,24 @@ onMounted(async () => {
     }
 }
 
+.pay-title {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 16px;
+}
+
 .payment-methods {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 20px 0;
+    justify-content: center;
+    gap: 16px;
 
     .payment-method {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 12px 16px;
-        border: 1px solid #dcdfe6;
+        padding: 12px 24px;
         border-radius: 8px;
-        width: 100%;
     }
 }
 

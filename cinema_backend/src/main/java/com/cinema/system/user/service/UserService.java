@@ -1,16 +1,19 @@
 package com.cinema.system.user.service;
 
 import com.cinema.system.common.exception.BusinessException;
+import com.cinema.system.user.dto.ChangePasswordRequest;
 import com.cinema.system.user.dto.UserProfileResponse;
 import com.cinema.system.user.entity.User;
 import com.cinema.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserProfileResponse getProfile(Long id) {
         User user = userRepository.findById(id)
@@ -24,6 +27,24 @@ public class UserService {
         if (request.getPhone() != null) user.setPhone(request.getPhone());
         if (request.getNickname() != null) user.setNickname(request.getNickname());
         if (request.getUsername() != null) user.setUsername(request.getUsername());
+        if (request.getIsMember() != null) user.setIsMember(request.getIsMember());
+        userRepository.save(user);
+    }
+
+    public void changePassword(Long id, ChangePasswordRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new BusinessException("原密码错误");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    public void deleteAccount(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
+        user.setStatus("DISABLED");
         userRepository.save(user);
     }
 

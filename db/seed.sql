@@ -64,61 +64,61 @@ FROM rows_gen r, cols_gen c;
 INSERT INTO movie (title, poster_url, description, duration, rating, genre, release_date, `status`)
 VALUES
     ('Interstellar',
-     'assets/posters/interstellar.jpg',
+     '/uploads/images/movies/3e39a1e904d646bfa0e08f9ab288cecc.jpg',
      'A team of explorers travel through a wormhole in space in an attempt to ensure humanity''s survival.',
      169, 8.6, 'Sci-Fi,Adventure,Drama',
      '2026-04-10', 'ON'),
 
     ('Inception',
-     'assets/posters/inception.jpg',
+     '/uploads/images/movies/0ec87ff1fc3e4ca2a92a7ee1759eb6f6.jpg',
      'A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.',
      148, 8.8, 'Sci-Fi,Action',
      '2026-04-10', 'ON'),
 
     ('Avatar',
-     'assets/posters/avatar.jpg',
+     '/uploads/images/movies/403838585b8646d584b8a547dbaca8b7.webp',
      'A paraplegic Marine is dispatched to the moon Pandora on a unique mission but becomes torn between following orders and protecting an alien civilization.',
      162, 7.9, 'Sci-Fi,Adventure',
      '2026-04-01', 'ON'),
 
     ('Dune',
-     'assets/posters/dune.jpg',
+     '/uploads/images/movies/acbcd891c18b402bafbe2670e3088817.jpg',
      'Feature adaptation of Frank Herbert''s science fiction novel about the son of a noble family entrusted with the protection of the most valuable asset in the galaxy.',
      155, 8.2, 'Sci-Fi,Adventure,Drama',
      '2026-04-15', 'ON'),
 
     ('Zootopia 2',
-     'assets/posters/zootopia.jpg',
+     '/uploads/images/movies/b7c9cb1f6a9240e99cf7cb2c43e394b6.jpg',
      'Detectives Judy Hopps and Nick Wilde return to solve a new mystery in the bustling city of Zootopia.',
      110, 8.5, 'Animation,Adventure,Comedy',
      '2026-04-05', 'ON'),
 
     ('Avengers: Endgame',
-     'assets/posters/avengers.jpg',
+     '/uploads/images/movies/fb3508b8dad7415cb395919208dbd83e.jpg',
      'After the devastating events of Infinity War, the Avengers assemble once more to reverse Thanos'' actions and restore balance to the universe.',
      181, 8.4, 'Action,Sci-Fi,Adventure',
      '2026-04-01', 'ON'),
 
     ('Forrest Gump',
-     'assets/posters/forrest_gump.jpg',
+     '/uploads/images/movies/5fd164a581404afaa52276b0d76260e3.jpg',
      'The story of Forrest Gump, a man with a low IQ but a kind heart, who unwittingly influences several historical events.',
      142, 8.8, 'Drama,Romance',
      '2026-04-01', 'ON'),
 
     ('Harry Potter and the Sorcerer''s Stone',
-     'assets/posters/harry_potter.jpg',
+     '/uploads/images/movies/54b947848ce4469bbcd296cdb16aba70.jpg',
      'An epic fantasy series following the journey of a young wizard, Harry Potter, and his friends as they battle dark forces.',
      152, 8.5, 'Fantasy,Adventure',
      '2026-04-01', 'ON'),
 
     ('The Matrix',
-     'assets/posters/matrix.jpg',
+     '/uploads/images/movies/6f7eed7945cb4ed6ae86914685734064.jpeg',
      'A computer hacker learns about the true nature of reality and his role in the war against the machines that control it.',
      136, 8.7, 'Sci-Fi,Action',
      '2026-05-01', 'ON'),
 
     ('Spirited Away',
-     'assets/posters/spirited_away.jpg',
+     '/uploads/images/movies/6d78b52351fc492fb0e8a09347439bf7.jpg',
      'During her family''s move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits.',
      125, 8.6, 'Animation,Fantasy,Adventure',
      '2026-05-01', 'ON');
@@ -244,11 +244,11 @@ VALUES
 -- =============================================================
 INSERT INTO snack (name, price, image_url, stock, `status`)
 VALUES
-    ('Popcorn',   3.00, 'assets/snacks/popcorn.png', 100, 'ON'),
-    ('Coca-Cola', 2.00, 'assets/snacks/cola.png',     200, 'ON'),
-    ('Nachos',    4.50, 'assets/snacks/nachos.png',   80,  'ON'),
-    ('Sprite',    2.00, 'assets/snacks/sprite.png',   150, 'ON'),
-    ('Drinks',    3.50, 'assets/snacks/drinks.png',   120, 'ON');
+    ('Popcorn',   3.00, '/uploads/images/snacks/f79f538619df48d6870d31b8925c8379.webp', 100, 'ON'),
+    ('Coca-Cola', 2.00, '/uploads/images/snacks/325f69d75097414785c3b98691784a96.png',  200, 'ON'),
+    ('Nachos',    4.50, '/uploads/images/snacks/cd144a6459ed468eb5da09d63d0caf6c.png',  80,  'ON'),
+    ('Sprite',    2.00, '/uploads/images/snacks/0f45e39f0d614c6588e4acf630eab796.jpeg', 150, 'ON'),
+    ('Juice',     3.50, '/uploads/images/snacks/d254f67006be42d5adb06ad944348268.jpeg', 120, 'ON');
 
 -- =============================================================
 -- 9. 定价规则

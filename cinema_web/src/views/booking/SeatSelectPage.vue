@@ -52,13 +52,11 @@ const maxCols = computed(() => {
 
 function toggleSeat(seat: SeatStatus) {
     if (selectedIds.value.has(seat.id)) {
-        // 取消选中：释放该座位的锁定
         selectedIds.value.delete(seat.id)
+        seat.status = 'AVAILABLE'
         const showingId = Number(route.query.showingId)
         if (showingId) {
-            unlockSeatsApi({ showingId, seatIds: [seat.id] }).then(() => {
-                seat.status = 'AVAILABLE'
-            }).catch(() => {})
+            unlockSeatsApi({ showingId, seatIds: [seat.id] }).catch(() => {})
         }
     } else if (seat.status === 'AVAILABLE') {
         selectedIds.value.add(seat.id)

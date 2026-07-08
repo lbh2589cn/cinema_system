@@ -48,3 +48,16 @@ export function getProfileApi(): Promise<UserProfile> {
 export function updateProfileApi(data: Partial<UserProfile>): Promise<void> {
     return request.put('/api/users/me', data)
 }
+
+export interface ChangePasswordRequest {
+    oldPassword: string
+    newPassword: string
+}
+
+export function changePasswordApi(data: ChangePasswordRequest): Promise<void> {
+    return request.put('/api/users/me/password', data)
+}
+
+export function deleteAccountApi(): Promise<void> {
+    return request.delete('/api/users/me')
+}
