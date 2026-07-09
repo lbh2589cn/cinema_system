@@ -24,20 +24,20 @@ public class UserController {
     public ApiResponse<Void> updateProfile(Authentication authentication, @RequestBody UserProfileResponse request) {
         Long userId = (Long) authentication.getPrincipal();
         userService.updateProfile(userId, request);
-        return ApiResponse.success("更新成功", null);
+        return ApiResponse.success("Updated successfully", null);
     }
 
     @PutMapping("/me/password")
     public ApiResponse<Void> changePassword(Authentication authentication, @RequestBody ChangePasswordRequest request) {
         Long userId = (Long) authentication.getPrincipal();
         userService.changePassword(userId, request);
-        return ApiResponse.success("密码修改成功", null);
+        return ApiResponse.success("Password changed successfully", null);
     }
 
     @DeleteMapping("/me")
     public ApiResponse<Void> deleteAccount(Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
         userService.deleteAccount(userId);
-        return ApiResponse.success("账号已注销", null);
+        return ApiResponse.success("Account deleted", null);
     }
 }

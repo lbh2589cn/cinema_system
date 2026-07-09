@@ -61,7 +61,7 @@ public class AdminController {
     @PutMapping("/users/{id}")
     public ApiResponse<Void> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         if (updates.containsKey("isMember")) {
             user.setIsMember((Boolean) updates.get("isMember"));
         }
@@ -69,7 +69,7 @@ public class AdminController {
             user.setStatus((String) updates.get("status"));
         }
         userRepository.save(user);
-        return ApiResponse.success("更新成功", null);
+        return ApiResponse.success("Updated successfully", null);
     }
 
     @GetMapping("/dashboard")
@@ -105,7 +105,7 @@ public class AdminController {
             m.put("paidAt", p.getPaidAt());
             m.put("createdAt", p.getCreatedAt());
             m.put("orderId", p.getOrderId());
-            // 查询关联订单信息
+            // Query related order info
             orderRepository.findById(p.getOrderId()).ifPresent(o -> {
                 m.put("orderNo", o.getOrderNo());
                 m.put("userId", o.getUserId());
@@ -152,9 +152,9 @@ public class AdminController {
     @DeleteMapping("/orders/{id}")
     public ApiResponse<Void> hardDeleteOrder(@PathVariable Long id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("订单不存在"));
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // 释放座位
+        // Release seats
         seatBookingRepository.findByOrderId(id).forEach(booking -> {
             booking.setStatus("AVAILABLE");
             booking.setLockedBy(null);
@@ -164,22 +164,22 @@ public class AdminController {
             booking.setOrderId(null);
         });
 
-        // 删除订单明细
+        // Delete order items
         orderItemRepository.deleteAll(orderItemRepository.findByOrderId(id));
-        // 删除支付记录
+        // Delete payment records
         paymentRepository.deleteAll(paymentRepository.findByOrderId(id));
-        // 删除订单
+        // Delete order
         orderRepository.delete(order);
 
-        return ApiResponse.success("订单已永久删除", null);
+        return ApiResponse.success("Order permanently deleted", null);
     }
 
     @Transactional
     @DeleteMapping("/payments/{id}")
     public ApiResponse<Void> hardDeletePayment(@PathVariable Long id) {
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("支付记录不存在"));
+                .orElseThrow(() -> new RuntimeException("Payment record not found"));
         paymentRepository.delete(payment);
-        return ApiResponse.success("支付记录已永久删除", null);
+        return ApiResponse.success("Payment record permanently deleted", null);
     }
 }

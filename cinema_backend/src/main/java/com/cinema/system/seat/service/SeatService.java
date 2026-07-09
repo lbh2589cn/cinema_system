@@ -27,7 +27,7 @@ public class SeatService {
     public List<SeatStatusResponse> getSeatsByShowing(Long showingId) {
         List<SeatBooking> bookings = seatBookingRepository.findByShowingId(showingId);
         if (bookings.isEmpty()) {
-            throw new BusinessException("该场次暂无座位数据");
+            throw new BusinessException("No seat data for this showing");
         }
 
         List<Long> seatIds = bookings.stream()
@@ -64,21 +64,21 @@ public class SeatService {
         Map<Long, HallSeat> hallSeatMap = hallSeats.stream()
                 .collect(Collectors.toMap(HallSeat::getId, s -> s));
 
-        // 验证用户是否为会员（VIP 座位限制）
+        // Verify if user is a member (VIP seat restriction)
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException("User not found"));
         boolean isMember = user.getIsMember() != null && user.getIsMember();
 
         for (SeatBooking booking : bookings) {
             HallSeat hallSeat = hallSeatMap.get(booking.getSeatId());
             if (hallSeat != null && "UNAVAILABLE".equals(hallSeat.getStatus())) {
-                throw new BusinessException("座位 " + booking.getSeatId() + " 已暂停使用");
+                throw new BusinessException("Seat " + booking.getSeatId() + " is unavailable");
             }
             if (hallSeat != null && "VIP".equals(hallSeat.getStatus()) && !isMember) {
-                throw new BusinessException("VIP 座位仅限会员选购");
+                throw new BusinessException("VIP seats are for members only");
             }
             if (!"AVAILABLE".equals(booking.getStatus())) {
-                throw new BusinessException("座位 " + booking.getSeatId() + " 已被锁定或售出");
+                throw new BusinessException("Seat " + booking.getSeatId() + " is already locked or sold");
             }
             booking.setStatus("LOCKED");
             booking.setLockedBy(userId);
@@ -97,7 +97,7 @@ public class SeatService {
                 continue;
             }
             if (!userId.equals(booking.getLockedBy())) {
-                throw new BusinessException("无权释放该座位");
+                throw new BusinessException("No permission to release this seat");
             }
             booking.setStatus("AVAILABLE");
             booking.setLockedBy(null);

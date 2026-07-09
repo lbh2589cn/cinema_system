@@ -40,7 +40,7 @@ public class SnackService {
 
     public Snack updateSnack(Long id, SnackCreateRequest request) {
         Snack snack = snackRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("零食不存在"));
+                .orElseThrow(() -> new BusinessException("Snack not found"));
         if (request.getImageUrl() != null && !request.getImageUrl().equals(snack.getImageUrl())) {
             deleteImageFile(snack.getImageUrl());
         }
@@ -54,7 +54,7 @@ public class SnackService {
 
     public void deleteSnack(Long id) {
         Snack snack = snackRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("零食不存在"));
+                .orElseThrow(() -> new BusinessException("Snack not found"));
         deleteImageFile(snack.getImageUrl());
         snackRepository.delete(snack);
     }

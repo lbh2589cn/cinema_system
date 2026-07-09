@@ -1,8 +1,8 @@
 package com.cinema.system.common.enums;
 
 public enum UserRoleEnum {
-    USER("USER", "普通用户"),
-    ADMIN("ADMIN", "管理员");
+    USER("USER", "User"),
+    ADMIN("ADMIN", "Admin");
 
     private final String code;
     private final String desc;

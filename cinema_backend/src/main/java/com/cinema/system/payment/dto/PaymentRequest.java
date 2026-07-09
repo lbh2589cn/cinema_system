@@ -6,9 +6,9 @@ import lombok.Data;
 
 @Data
 public class PaymentRequest {
-    @NotNull(message = "订单ID不能为空")
+    @NotNull(message = "Order ID cannot be empty")
     private Long orderId;
 
-    @NotBlank(message = "支付方式不能为空")
+    @NotBlank(message = "Payment method cannot be empty")
     private String paymentMethod;
 }

@@ -35,7 +35,7 @@ public class HallService {
 
     public Map<String, Object> getHallDetail(Long id) {
         Hall hall = hallRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("影厅不存在"));
+                .orElseThrow(() -> new BusinessException("Hall not found"));
         List<HallSeat> seats = hallSeatRepository.findByHallId(id);
         Map<String, Object> result = new HashMap<>();
         result.put("hall", hall);
@@ -53,7 +53,7 @@ public class HallService {
         hall.setDescription(request.getDescription());
         hall = hallRepository.save(hall);
 
-        // 自动生成座位
+        // Auto-generate seats
         for (int r = 1; r <= request.getRows(); r++) {
             for (int c = 1; c <= request.getCols(); c++) {
                 HallSeat seat = new HallSeat();
@@ -65,7 +65,7 @@ public class HallService {
             }
         }
 
-        // 创建时自定义座位类型
+        // Custom seat type on creation
         if (request.getSeats() != null && !request.getSeats().isEmpty()) {
             List<HallSeat> created = hallSeatRepository.findByHallId(hall.getId());
             for (HallSeat seat : created) {
@@ -87,7 +87,7 @@ public class HallService {
     @Transactional
     public Hall updateHall(Long id, HallUpdateRequest request) {
         Hall hall = hallRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("影厅不存在"));
+                .orElseThrow(() -> new BusinessException("Hall not found"));
 
         boolean sizeChanged = !hall.getRows().equals(request.getRows()) || !hall.getCols().equals(request.getCols());
 
@@ -98,9 +98,9 @@ public class HallService {
         hall.setDescription(request.getDescription());
         hall = hallRepository.save(hall);
 
-        // 行列数有变化时，增量更新座位（已存在的座位保持 ID 不变）
+        // When row/col count changes, incrementally update seats (existing seats keep IDs)
         if (sizeChanged) {
-            // 按 (row, col) 索引旧座位
+            // Index old seats by (row, col)
             List<HallSeat> existingSeats = hallSeatRepository.findByHallId(id);
             java.util.Map<String, HallSeat> oldSeatMap = new java.util.HashMap<>();
             for (HallSeat s : existingSeats) {
@@ -125,15 +125,15 @@ public class HallService {
                 }
             }
 
-            // 删除不再存在的旧座位
+            // Delete old seats that no longer exist
             Set<Long> removedIds = oldSeatMap.values().stream().map(HallSeat::getId).collect(java.util.stream.Collectors.toSet());
             if (!removedIds.isEmpty()) {
                 hallSeatRepository.deleteBySeatIdIn(removedIds);
-                // 同步清理这些座位在各场次中的预订记录
+                // Also clean up booking records for these seats across showings
                 seatBookingRepository.deleteBySeatIdIn(removedIds);
             }
 
-            // 为新增座位创建各场次的预订记录
+            // Create booking records for new seats across showings
             if (!addedSeats.isEmpty()) {
                 List<Showing> showings = showingRepository.findByHallId(id);
                 Set<Long> addedIds = addedSeats.stream().map(HallSeat::getId).collect(Collectors.toSet());
@@ -150,7 +150,7 @@ public class HallService {
             }
         }
 
-        // 更新座位类型
+        // Update seat types
         if (request.getSeats() != null && !request.getSeats().isEmpty()) {
             List<HallSeat> existingSeats = hallSeatRepository.findByHallId(id);
             for (HallSeat seat : existingSeats) {
@@ -172,7 +172,7 @@ public class HallService {
     @Transactional
     public void deleteHall(Long id) {
         Hall hall = hallRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("影厅不存在"));
+                .orElseThrow(() -> new BusinessException("Hall not found"));
         hallSeatRepository.deleteByHallId(id);
         hallRepository.delete(hall);
     }

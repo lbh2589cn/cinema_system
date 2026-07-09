@@ -13,9 +13,9 @@ onMounted(async () => {
     if (userStore.isLoggedIn) {
         try {
             await userStore.fetchUserInfo()
-            ElMessage.success('读取本地缓存信息，已自动登录')
+            ElMessage.success('Restored session from local cache')
         } catch {
-            // token 已失效，清除本地缓存
+            // Token expired, clearing local cache
             userStore.logout()
         }
     }

@@ -14,7 +14,7 @@ public class SwaggerConfig {
             .info(new Info()
                 .title("Cinema Ticket Booking System API")
                 .version("1.0.0")
-                .description("电影院购票系统 API 文档")
+                .description("Cinema Booking System API Documentation")
                 .contact(new Contact().name("Cinema Team")));
     }
 }

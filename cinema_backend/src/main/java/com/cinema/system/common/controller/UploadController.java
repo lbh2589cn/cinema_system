@@ -20,7 +20,7 @@ public class UploadController {
     public ApiResponse<String> upload(@RequestParam("file") MultipartFile file,
                                       @RequestParam(defaultValue = "") String directory) {
         if (file.isEmpty()) {
-            return ApiResponse.error(400, "请选择文件");
+            return ApiResponse.error(400, "Please select a file");
         }
 
         try {
@@ -46,7 +46,7 @@ public class UploadController {
             }
             return ApiResponse.success(url);
         } catch (IOException e) {
-            return ApiResponse.error(500, "文件上传失败: " + e.getMessage());
+            return ApiResponse.error(500, "File upload failed: " + e.getMessage());
         }
     }
 }

@@ -20,7 +20,7 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
         if (userRepository.findByUserId(request.getUserId()).isPresent()) {
-            throw new BusinessException("账号已存在");
+            throw new BusinessException("Account already exists");
         }
 
         User user = new User();
@@ -36,14 +36,14 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByUserId(request.getUserId())
-                .orElseThrow(() -> new BusinessException("账号或密码错误"));
+                .orElseThrow(() -> new BusinessException("Invalid account or password"));
 
         if ("DISABLED".equals(user.getStatus())) {
-            throw new BusinessException("账号已被禁用");
+            throw new BusinessException("Account has been disabled");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new BusinessException("账号或密码错误");
+            throw new BusinessException("Invalid account or password");
         }
 
         String token = jwtUtil.generateToken(user.getId(), user.getRole());

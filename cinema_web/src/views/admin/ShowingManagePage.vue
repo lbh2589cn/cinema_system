@@ -1,34 +1,36 @@
 <template>
     <div>
         <div class="page-header">
-            <h2 class="page-title">排片管理</h2>
-            <el-button type="primary" @click="handleAdd">新增排片</el-button>
+            <h2 class="page-title">Showing Management</h2>
+            <el-button type="primary" @click="handleAdd">Add Showing</el-button>
         </div>
 
         <el-card class="page-card">
             <div class="filters" style="margin-bottom: 16px">
-                <el-date-picker v-model="filterDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" @change="loadShowings" />
+                <el-date-picker v-model="filterDate" type="date" format="DD/MM/YYYY" value-format="YYYY-MM-DD" placeholder="Select date" @change="loadShowings" />
             </div>
             <el-table :data="showings" v-loading="loading" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="movieId" label="电影ID" width="80" />
-                <el-table-column prop="hallId" label="影厅ID" width="80" />
-                <el-table-column prop="showDate" label="放映日期" width="120" />
-                <el-table-column prop="showTime" label="放映时间" width="100" />
-                <el-table-column prop="basePrice" label="票价" width="100">
+                <el-table-column prop="movieId" label="Movie ID" width="80" />
+                <el-table-column prop="hallId" label="Hall ID" width="80" />
+                <el-table-column label="Show Date" width="120">
+                    <template #default="{ row }">{{ formatDate(row.showDate) }}</template>
+                </el-table-column>
+                <el-table-column prop="showTime" label="Show Time" width="100" />
+                <el-table-column prop="basePrice" label="Base Price" width="100">
                     <template #default="{ row }">¥{{ row.basePrice }}</template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态" width="120">
+                <el-table-column prop="status" label="Status" width="120">
                     <template #default="{ row }">
                         <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作" width="260">
+                <el-table-column label="Actions" width="260">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click="handleEdit(row)">编辑</el-button>
-                        <el-button text type="danger" v-if="canCancelRow(row)" @click="handleCancel(row)">取消</el-button>
-                        <el-button text type="success" v-if="canRestoreRow(row)" @click="handleRestore(row)">恢复</el-button>
-                        <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
+                        <el-button text type="primary" @click="handleEdit(row)">Edit</el-button>
+                        <el-button text type="danger" v-if="canCancelRow(row)" @click="handleCancel(row)">Cancel</el-button>
+                        <el-button text type="success" v-if="canRestoreRow(row)" @click="handleRestore(row)">Restore</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -44,31 +46,31 @@
             />
         </div>
 
-        <el-dialog v-model="showDialog" :title="isEdit ? '编辑排片' : '新增排片'" width="500px">
+        <el-dialog v-model="showDialog" :title="isEdit ? 'Edit Showing' : 'Add Showing'" width="500px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-                <el-form-item label="电影" prop="movieId">
-                    <el-select v-model="form.movieId" placeholder="选择电影" filterable style="width: 100%">
+                <el-form-item label="Movie" prop="movieId">
+                    <el-select v-model="form.movieId" placeholder="Select movie" filterable style="width: 100%">
                         <el-option v-for="m in movies" :key="m.id" :label="m.title" :value="m.id" />
                     </el-select>
                 </el-form-item>
-                <el-form-item label="影厅" prop="hallId">
-                    <el-select v-model="form.hallId" placeholder="选择影厅" style="width: 100%">
+                <el-form-item label="Hall" prop="hallId">
+                    <el-select v-model="form.hallId" placeholder="Select hall" style="width: 100%">
                         <el-option v-for="h in halls" :key="h.id" :label="h.name" :value="h.id" />
                     </el-select>
                 </el-form-item>
-                <el-form-item label="放映日期" prop="showDate">
-                    <el-date-picker v-model="form.showDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
+                <el-form-item label="Show Date" prop="showDate">
+                    <el-date-picker v-model="form.showDate" type="date" format="DD/MM/YYYY" value-format="YYYY-MM-DD" style="width: 100%" />
                 </el-form-item>
-                <el-form-item label="放映时间" prop="showTime">
+                <el-form-item label="Show Time" prop="showTime">
                     <el-time-picker v-model="form.showTime" value-format="HH:mm" format="HH:mm" style="width: 100%" />
                 </el-form-item>
-                <el-form-item label="票价" prop="basePrice">
+                <el-form-item label="Base Price" prop="basePrice">
                     <el-input-number v-model="form.basePrice" :min="0" :step="5" :precision="2" />
                 </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="showDialog = false">关闭</el-button>
-                <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
+                <el-button @click="showDialog = false">Close</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">Save</el-button>
             </template>
         </el-dialog>
     </div>
@@ -84,6 +86,7 @@ import { getHallsApi } from '@/api/hall'
 import type { Showing } from '@/api/showing'
 import type { Movie } from '@/api/movie'
 import type { Hall } from '@/api/hall'
+import { formatDate } from '@/composables/useDateFormatter'
 
 const showings = ref<Showing[]>([])
 const movies = ref<Movie[]>([])
@@ -109,10 +112,10 @@ const form = reactive({
 })
 
 const rules = {
-    movieId: [{ required: true, message: '请选择电影', trigger: 'change' }],
-    hallId: [{ required: true, message: '请选择影厅', trigger: 'change' }],
-    showDate: [{ required: true, message: '请选择日期', trigger: 'change' }],
-    showTime: [{ required: true, message: '请选择时间', trigger: 'change' }],
+    movieId: [{ required: true, message: 'Please select a movie', trigger: 'change' }],
+    hallId: [{ required: true, message: 'Please select a hall', trigger: 'change' }],
+    showDate: [{ required: true, message: 'Please select a date', trigger: 'change' }],
+    showTime: [{ required: true, message: 'Please select a time', trigger: 'change' }],
 }
 
 function statusType(status: string) {
@@ -121,7 +124,7 @@ function statusType(status: string) {
 }
 
 function statusLabel(status: string) {
-    const map: Record<string, string> = { SCHEDULED: '正常', CANCELLED: '取消' }
+    const map: Record<string, string> = { SCHEDULED: 'Scheduled', CANCELLED: 'Cancelled' }
     return map[status] || status
 }
 
@@ -189,7 +192,7 @@ async function handleSave() {
                 showTime: form.showTime,
                 basePrice: form.basePrice,
             })
-            ElMessage.success('更新成功')
+            ElMessage.success('Update successful')
         } else {
             await createShowingApi({
                 movieId: form.movieId!,
@@ -198,7 +201,7 @@ async function handleSave() {
                 showTime: form.showTime,
                 basePrice: form.basePrice,
             })
-            ElMessage.success('创建成功')
+            ElMessage.success('Created successfully')
         }
         showDialog.value = false
         await loadShowings()
@@ -209,9 +212,9 @@ async function handleSave() {
 
 async function handleCancel(showing: Showing) {
     try {
-        await ElMessageBox.confirm('确定要取消吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('Are you sure you want to cancel this showing?', 'Notice', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         await cancelShowingApi(showing.id)
-        ElMessage.success('已取消')
+        ElMessage.success('Cancelled successfully')
         showDialog.value = false
         await loadShowings()
     } catch {
@@ -221,9 +224,9 @@ async function handleCancel(showing: Showing) {
 
 async function handleRestore(showing: Showing) {
     try {
-        await ElMessageBox.confirm('确定要恢复吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('Are you sure you want to restore this showing?', 'Notice', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         await restoreShowingApi(showing.id)
-        ElMessage.success('已恢复')
+        ElMessage.success('Restored successfully')
         showDialog.value = false
         await loadShowings()
     } catch {
@@ -233,9 +236,9 @@ async function handleRestore(showing: Showing) {
 
 async function handleDelete(showing: Showing) {
     try {
-        await ElMessageBox.confirm('确定要删除该场次记录吗？此操作不可恢复，将同时删除关联的座位预订数据。', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('Are you sure you want to permanently delete this showing? This action cannot be undone and will also delete associated seat booking data.', 'Notice', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         await deleteShowingApi(showing.id)
-        ElMessage.success('删除成功')
+        ElMessage.success('Deleted successfully')
         showDialog.value = false
         await loadShowings()
     } catch {

@@ -2,10 +2,10 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">选择座位</span>
+                <span class="card-title">Select Seats</span>
             </template>
             <div class="hall-info" v-if="showing">
-                影厅 #{{ showing.hallId }} | {{ showing.showDate }} {{ showing.showTime }}
+                Hall #{{ showing.hallId }} | {{ formatDate(showing.showDate) }} {{ showing.showTime }}
             </div>
             <SeatGrid
                 v-if="seats.length > 0"
@@ -16,9 +16,9 @@
                 @select="toggleSeat"
             />
             <div class="actions" v-if="selectedIds.size > 0">
-                <div class="selected-info">已选 {{ selectedIds.size }} 个座位</div>
+                <div class="selected-info">{{ selectedIds.size }} seat(s) selected</div>
                 <el-button type="primary" size="large" @click="handleNext" :loading="locking">
-                    去选购零食
+                    Go to Snacks
                 </el-button>
             </div>
         </el-card>
@@ -33,6 +33,7 @@ import { getSeatsApi, lockSeatsApi, unlockSeatsApi } from '@/api/seat'
 import { getShowingApi } from '@/api/showing'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
+import { formatDate } from '@/composables/useDateFormatter'
 import type { SeatStatus } from '@/api/seat'
 import type { Showing } from '@/api/showing'
 
@@ -72,7 +73,7 @@ async function handleNext() {
         const showingId = Number(route.query.showingId)
         const movieId = route.query.movieId
 
-        // 只锁定尚未锁定的座位
+        // Only lock seats not yet locked
         const seatsToLock = seats.value.filter(s => selectedIds.value.has(s.id) && s.status === 'AVAILABLE')
         if (seatsToLock.length > 0) {
             await lockSeatsApi({ showingId, seatIds: seatsToLock.map(s => s.id) })
@@ -83,7 +84,7 @@ async function handleNext() {
         )
         router.push(`/snacks?movieId=${movieId}&showingId=${showingId}`)
     } catch {
-        ElMessage.error('锁定座位失败，请重试')
+        ElMessage.error('Failed to lock seats, please retry')
     } finally {
         locking.value = false
     }
@@ -94,21 +95,21 @@ onMounted(async () => {
     try {
         const showingId = Number(route.query.showingId)
         if (!showingId) {
-            ElMessage.error('缺少场次信息')
+            ElMessage.error('Missing show information')
             router.push('/movies')
             return
         }
         showing.value = await getShowingApi(showingId)
 
-        // 重新获取最新座位数据
+        // Re-fetch the latest seat data
         seats.value = await getSeatsApi(showingId)
 
-        // 从零食页返回时，恢复之前选中的座位
+        // Restore previously selected seats when returning from snack page
         appStore.selectedSeats.forEach((s: any) => {
             selectedIds.value.add(s.id)
         })
     } catch (e: any) {
-        ElMessage.error(e?.message || '获取座位信息失败')
+        ElMessage.error(e?.message || 'Failed to get seat information')
     } finally {
         loading.value = false
     }

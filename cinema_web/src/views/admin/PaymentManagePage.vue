@@ -2,34 +2,36 @@
     <div class="page-container" v-loading="loading">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">交易记录</span>
+                <span class="card-title">Payments</span>
             </template>
 
             <el-table :data="payments" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="paymentNo" label="流水号" width="180" />
-                <el-table-column prop="orderNo" label="订单号" width="180" />
-                <el-table-column prop="userId" label="用户ID" width="80" />
-                <el-table-column prop="amount" label="金额" width="100">
+                <el-table-column prop="paymentNo" label="Payment No." width="180" />
+                <el-table-column prop="orderNo" label="Order No." width="180" />
+                <el-table-column prop="userId" label="User ID" width="80" />
+                <el-table-column prop="amount" label="Amount" width="100">
                     <template #default="{ row }">¥{{ row.amount.toFixed(2) }}</template>
                 </el-table-column>
-                <el-table-column prop="paymentMethod" label="支付方式" width="120">
+                <el-table-column prop="paymentMethod" label="Payment Method" width="120">
                     <template #default="{ row }">{{ methodLabel(row.paymentMethod) }}</template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态" width="100">
+                <el-table-column prop="status" label="Status" width="100">
                     <template #default="{ row }">
                         <el-tag :type="statusType(row.status)" size="small">
                             {{ statusLabel(row.status) }}
                         </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="paidAt" label="支付时间" width="170">
-                    <template #default="{ row }">{{ row.paidAt || '-' }}</template>
+                <el-table-column label="Paid At" width="170">
+                    <template #default="{ row }">{{ formatDate(row.paidAt) }}</template>
                 </el-table-column>
-                <el-table-column prop="createdAt" label="创建时间" width="170" />
-                <el-table-column label="操作" width="120">
+                <el-table-column label="Created At" width="170">
+                    <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+                </el-table-column>
+                <el-table-column label="Actions" width="150">
                     <template #default="{ row }">
-                        <el-button text type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+                        <el-button text type="danger" size="small" @click="handleDelete(row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -51,6 +53,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getAdminPaymentsApi, deleteAdminPaymentApi } from '@/api/payment'
+import { formatDate } from '@/composables/useDateFormatter'
 
 const payments = ref<any[]>([])
 const loading = ref(false)
@@ -59,7 +62,7 @@ const size = ref(10)
 const total = ref(0)
 
 function methodLabel(method: string) {
-    const map: Record<string, string> = { WECHAT: '微信支付', ALIPAY: '支付宝', CREDIT_CARD: '信用卡', BALANCE: '余额' }
+    const map: Record<string, string> = { WECHAT: 'WeChat Pay', ALIPAY: 'Alipay', CREDIT_CARD: 'Credit Card', BALANCE: 'Balance' }
     return map[method] || method
 }
 
@@ -69,19 +72,19 @@ function statusType(status: string) {
 }
 
 function statusLabel(status: string) {
-    const map: Record<string, string> = { PENDING: '待支付', SUCCESS: '支付成功', FAILED: '支付失败', REFUNDED: '已退款' }
+    const map: Record<string, string> = { PENDING: 'Pending', SUCCESS: 'Success', FAILED: 'Failed', REFUNDED: 'Refunded' }
     return map[status] || status
 }
 
 async function handleDelete(row: any) {
     try {
         await ElMessageBox.confirm(
-            `确认永久删除交易记录 ${row.paymentNo}？此操作不可恢复。`,
-            '确认删除',
-            { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }
+            `Confirm permanent deletion of transaction record ${row.paymentNo}? This action cannot be undone.`,
+            'Confirm Delete',
+            { confirmButtonText: 'Confirm Delete', cancelButtonText: 'Cancel', type: 'warning' }
         )
         await deleteAdminPaymentApi(row.id)
-        ElMessage.success('交易记录已永久删除')
+        ElMessage.success('Transaction record permanently deleted')
         await fetchPayments()
     } catch {
         // cancelled or error

@@ -8,13 +8,13 @@ import java.time.LocalDate;
 
 @Data
 public class MovieCreateRequest {
-    @NotBlank(message = "电影名称不能为空")
+    @NotBlank(message = "Movie title cannot be empty")
     private String title;
 
     private String posterUrl;
     private String description;
 
-    @NotNull(message = "时长不能为空")
+    @NotNull(message = "Duration cannot be empty")
     private Integer duration;
 
     private BigDecimal rating;

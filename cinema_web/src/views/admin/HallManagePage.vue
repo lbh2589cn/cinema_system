@@ -1,25 +1,25 @@
 <template>
     <div>
         <div class="page-header">
-            <h2 class="page-title">影厅管理</h2>
-            <el-button type="primary" @click="openCreate">新增影厅</el-button>
+            <h2 class="page-title">Hall Management</h2>
+            <el-button type="primary" @click="openCreate">Add Hall</el-button>
         </div>
 
         <el-card class="page-card">
             <el-table :data="halls" v-loading="loading" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="name" label="名称" min-width="150" />
-                <el-table-column prop="rows" label="行数" width="80" />
-                <el-table-column prop="cols" label="列数" width="80" />
-                <el-table-column prop="seatCount" label="座位数" width="80" />
-                <el-table-column prop="description" label="描述" min-width="200">
+                <el-table-column prop="name" label="Hall Name" min-width="150" />
+                <el-table-column prop="rows" label="Rows" width="80" />
+                <el-table-column prop="cols" label="Columns" width="80" />
+                <el-table-column prop="seatCount" label="Total Seats" width="80" />
+                <el-table-column prop="description" label="Description" min-width="200">
                     <template #default="{ row }">{{ row.description || '-' }}</template>
                 </el-table-column>
-                <el-table-column label="操作" width="280">
+                <el-table-column label="Actions" width="280">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click="viewSeats(row)">查看座位</el-button>
-                        <el-button text type="warning" @click="openEdit(row)">编辑</el-button>
-                        <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
+                        <el-button text type="primary" @click="viewSeats(row)">View Seats</el-button>
+                        <el-button text type="warning" @click="openEdit(row)">Edit</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -35,20 +35,20 @@
             />
         </div>
 
-        <el-dialog v-model="showDialog" :title="isEdit ? '编辑影厅' : '新增影厅'" width="560px">
+        <el-dialog v-model="showDialog" :title="isEdit ? 'Edit Hall' : 'Add Hall'" width="560px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-                <el-form-item label="名称" prop="name">
+                <el-form-item label="Hall Name" prop="name">
                     <el-input v-model="form.name" />
                 </el-form-item>
-                <el-form-item label="行数" prop="rows">
+                <el-form-item label="Rows" prop="rows">
                     <el-input-number v-model="form.rows" :min="1" :max="30" />
                 </el-form-item>
-                <el-form-item label="列数" prop="cols">
+                <el-form-item label="Columns" prop="cols">
                     <el-input-number v-model="form.cols" :min="1" :max="30" />
                 </el-form-item>
-                <el-form-item label="座位图" v-if="showDialog">
+                <el-form-item label="Seat Map" v-if="showDialog">
                     <div class="seat-edit-area">
-                        <div class="screen-label">银幕</div>
+                        <div class="screen-label">Screen</div>
                         <div class="screen-line"></div>
                         <div class="seat-grid-preview" :style="{ gridTemplateColumns: `repeat(${form.cols}, minmax(36px, 1fr))` }">
                             <el-dropdown v-for="seat in editSeats" :key="`${seat.rowNum}-${seat.colNum}`"
@@ -58,34 +58,34 @@
                                 </div>
                                 <template #dropdown>
                                     <el-dropdown-menu>
-                                        <el-dropdown-item command="STANDARD">标准座</el-dropdown-item>
-                                        <el-dropdown-item command="VIP">VIP座</el-dropdown-item>
-                                        <el-dropdown-item command="UNAVAILABLE">不可用</el-dropdown-item>
+                                        <el-dropdown-item command="STANDARD">Standard</el-dropdown-item>
+                                        <el-dropdown-item command="VIP">VIP</el-dropdown-item>
+                                        <el-dropdown-item command="UNAVAILABLE">Unavailable</el-dropdown-item>
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
                         </div>
                         <div class="seat-legend">
-                            <div class="legend-item"><span class="legend-dot standard"></span>标准座</div>
-                            <div class="legend-item"><span class="legend-dot vip"></span>VIP座</div>
-                            <div class="legend-item"><span class="legend-dot unavailable"></span>不可用</div>
+                            <div class="legend-item"><span class="legend-dot standard"></span>Standard</div>
+                            <div class="legend-item"><span class="legend-dot vip"></span>VIP</div>
+                            <div class="legend-item"><span class="legend-dot unavailable"></span>Unavailable</div>
                         </div>
-                         <p class="seat-tip">* 点击座位可选择状态</p>
+                         <p class="seat-tip">* Click a seat to change its status</p>
                      </div>
                  </el-form-item>
-                 <el-form-item label="描述" prop="description">
+                 <el-form-item label="Description" prop="description">
                      <el-input v-model="form.description" type="textarea" />
                  </el-form-item>
              </el-form>
             <template #footer>
-                <el-button @click="showDialog = false">取消</el-button>
-                <el-button type="primary" @click="handleSave" :loading="saving">{{ isEdit ? '更新' : '保存' }}</el-button>
+                <el-button @click="showDialog = false">Cancel</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">{{ isEdit ? 'Update' : 'Save' }}</el-button>
             </template>
         </el-dialog>
 
-        <el-dialog v-model="showSeatsDialog" title="座位布局" width="600px">
+        <el-dialog v-model="showSeatsDialog" title="Seat Layout" width="600px">
             <div v-if="selectedHall" class="seat-layout">
-                <div class="screen-label">银幕</div>
+                <div class="screen-label">Screen</div>
                 <div class="screen-line"></div>
                 <div class="seat-grid-preview" :style="{ gridTemplateColumns: `repeat(${selectedHall.cols}, minmax(36px, 1fr))` }">
                     <div v-for="seat in hallSeats" :key="seat.id" class="mini-seat" :class="seat.status.toLowerCase()">
@@ -93,13 +93,13 @@
                     </div>
                 </div>
                 <div class="seat-legend">
-                    <div class="legend-item"><span class="legend-dot standard"></span>标准座</div>
-                    <div class="legend-item"><span class="legend-dot vip"></span>VIP座</div>
-                    <div class="legend-item"><span class="legend-dot unavailable"></span>不可用</div>
+                    <div class="legend-item"><span class="legend-dot standard"></span>Standard</div>
+                    <div class="legend-item"><span class="legend-dot vip"></span>VIP</div>
+                    <div class="legend-item"><span class="legend-dot unavailable"></span>Unavailable</div>
                 </div>
             </div>
             <template #footer>
-                <el-button @click="showSeatsDialog = false">关闭</el-button>
+                <el-button @click="showSeatsDialog = false">Close</el-button>
             </template>
         </el-dialog>
     </div>
@@ -136,9 +136,9 @@ const form = reactive({
 })
 
 const rules = {
-    name: [{ required: true, message: '请输入影厅名称', trigger: 'blur' }],
-    rows: [{ required: true, message: '请输入行数', trigger: 'blur' }],
-    cols: [{ required: true, message: '请输入列数', trigger: 'blur' }],
+    name: [{ required: true, message: 'Please enter hall name', trigger: 'blur' }],
+    rows: [{ required: true, message: 'Please enter row count', trigger: 'blur' }],
+    cols: [{ required: true, message: 'Please enter column count', trigger: 'blur' }],
 }
 
 async function loadHalls() {
@@ -214,10 +214,10 @@ async function handleSave() {
         const payload = { ...form, seats: changes.length > 0 ? changes : undefined }
         if (isEdit.value && editId.value) {
             await updateHallApi(editId.value, payload)
-            ElMessage.success('更新成功')
+            ElMessage.success('Update successful')
         } else {
             await createHallApi(payload as any)
-            ElMessage.success('创建成功')
+            ElMessage.success('Created successfully')
         }
         showDialog.value = false
         resetForm()
@@ -229,9 +229,9 @@ async function handleSave() {
 
 async function handleDelete(hall: Hall) {
     try {
-        await ElMessageBox.confirm(`确定要删除影厅「${hall.name}」吗？此操作不可恢复！`, '警告', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'error' })
+        await ElMessageBox.confirm(`Are you sure you want to delete hall "${hall.name}"? This action cannot be undone!`, 'Warning', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'error' })
         await deleteHallApi(hall.id)
-        ElMessage.success('删除成功')
+        ElMessage.success('Deleted successfully')
         await loadHalls()
     } catch {
         // cancelled

@@ -47,20 +47,20 @@ public class ShowingController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> cancelShowing(@PathVariable Long id) {
         showingService.cancelShowing(id);
-        return ApiResponse.success("取消成功", null);
+        return ApiResponse.success("Cancelled successfully", null);
     }
 
     @PostMapping("/{id}/restore")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> restoreShowing(@PathVariable Long id) {
         showingService.restoreShowing(id);
-        return ApiResponse.success("恢复成功", null);
+        return ApiResponse.success("Restored successfully", null);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteShowing(@PathVariable Long id) {
         showingService.deleteShowing(id);
-        return ApiResponse.success("删除成功", null);
+        return ApiResponse.success("Deleted successfully", null);
     }
 }

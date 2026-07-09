@@ -41,7 +41,7 @@ public class MovieService {
 
     public Movie getMovie(Long id) {
         return movieRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("电影不存在"));
+                .orElseThrow(() -> new BusinessException("Movie not found"));
     }
 
     public Movie createMovie(MovieCreateRequest request) {

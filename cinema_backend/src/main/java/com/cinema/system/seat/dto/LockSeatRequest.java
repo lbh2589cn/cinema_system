@@ -7,9 +7,9 @@ import java.util.List;
 
 @Data
 public class LockSeatRequest {
-    @NotNull(message = "排片ID不能为空")
+    @NotNull(message = "Showing ID cannot be empty")
     private Long showingId;
 
-    @NotEmpty(message = "座位ID列表不能为空")
+    @NotEmpty(message = "Seat ID list cannot be empty")
     private List<Long> seatIds;
 }

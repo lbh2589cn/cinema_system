@@ -3,11 +3,11 @@
         <div class="header-left">
             <router-link to="/" class="logo">
                 <el-icon :size="24"><Film /></el-icon>
-                <span>电影院购票系统</span>
+                <span>Cinema Booking System</span>
             </router-link>
             <el-button v-if="showBackButton" text class="back-btn" @click="goBack">
                 <el-icon><ArrowLeft /></el-icon>
-                <span>返回</span>
+                <span>Back</span>
             </el-button>
             <el-icon class="collapse-btn" @click="toggleSidebar" v-if="isAdminRoute">
                 <Fold />
@@ -23,24 +23,24 @@
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item @click="$router.push('/profile')">
-                                <el-icon><User /></el-icon>个人中心
+                                <el-icon><User /></el-icon>My Account
                             </el-dropdown-item>
                             <el-dropdown-item @click="$router.push('/orders')">
-                                <el-icon><List /></el-icon>我的订单
+                                <el-icon><List /></el-icon>My Orders
                             </el-dropdown-item>
                             <el-dropdown-item v-if="userStore.isAdmin" @click="$router.push('/admin/dashboard')">
-                                <el-icon><Setting /></el-icon>管理后台
+                                <el-icon><Setting /></el-icon>Admin Panel
                             </el-dropdown-item>
                             <el-dropdown-item divided @click="handleLogout">
-                                <el-icon><SwitchButton /></el-icon>退出登录
+                                <el-icon><SwitchButton /></el-icon>Sign Out
                             </el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
             </template>
             <template v-else>
-                <el-button text @click="$router.push('/login')">登录</el-button>
-                <el-button text @click="$router.push('/register')">注册</el-button>
+                <el-button text @click="$router.push('/login')">Sign In</el-button>
+                <el-button text @click="$router.push('/register')">Register</el-button>
             </template>
         </div>
     </el-header>
@@ -80,7 +80,7 @@ function goBack() {
             break
         }
         case 'SeatSelect': {
-            // 返回选座之前，释放已锁定的座位
+            // Release locked seats before going back
             const showingId = Number(route.query.showingId) || appStore.currentShowingId
             const seatIds = appStore.selectedSeats.map((s: any) => s.id)
             if (showingId && seatIds.length > 0) {
@@ -92,7 +92,7 @@ function goBack() {
             break
         }
         case 'SnackOrder': {
-            // 返回选座页面：保留锁定状态，仅恢复选中记录用于回显
+            // Back to seat selection: keep locked status, restore selection for display
             const showingId = Number(route.query.showingId) || appStore.currentShowingId
             const movieId = route.query.movieId || appStore.currentMovieId
             router.push(`/seats?movieId=${movieId}&showingId=${showingId}`)

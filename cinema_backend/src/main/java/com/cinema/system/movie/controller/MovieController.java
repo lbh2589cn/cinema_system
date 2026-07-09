@@ -50,13 +50,13 @@ public class MovieController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> hideMovie(@PathVariable Long id) {
         movieService.hideMovie(id);
-        return ApiResponse.success("已下架", null);
+        return ApiResponse.success("Deactivated", null);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteMovie(@PathVariable Long id) {
         movieService.deleteMovie(id);
-        return ApiResponse.success("删除成功", null);
+        return ApiResponse.success("Deleted successfully", null);
     }
 }

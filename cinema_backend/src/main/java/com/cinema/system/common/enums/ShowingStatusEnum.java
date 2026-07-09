@@ -1,8 +1,8 @@
 package com.cinema.system.common.enums;
 
 public enum ShowingStatusEnum {
-    SCHEDULED("SCHEDULED", "已排片"),
-    CANCELLED("CANCELLED", "已取消");
+    SCHEDULED("SCHEDULED", "Scheduled"),
+    CANCELLED("CANCELLED", "Cancelled");
 
     private final String code;
     private final String desc;

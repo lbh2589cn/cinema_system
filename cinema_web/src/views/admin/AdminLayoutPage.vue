@@ -10,39 +10,39 @@
             >
                 <el-menu-item index="/admin/dashboard">
                     <el-icon><DataAnalysis /></el-icon>
-                    <span>仪表盘</span>
+                    <span>Dashboard</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/movies">
                     <el-icon><Film /></el-icon>
-                    <span>电影管理</span>
+                    <span>Movie Management</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/snacks">
                     <el-icon><Food /></el-icon>
-                    <span>小食管理</span>
+                    <span>Snack Management</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/showings">
                     <el-icon><Timer /></el-icon>
-                    <span>排片管理</span>
+                    <span>Showing Management</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/halls">
                     <el-icon><OfficeBuilding /></el-icon>
-                    <span>影厅管理</span>
+                    <span>Hall Management</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/orders">
                     <el-icon><List /></el-icon>
-                    <span>订单管理</span>
+                    <span>Order Management</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/users">
                     <el-icon><User /></el-icon>
-                    <span>用户管理</span>
+                    <span>User Management</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/pricing">
                     <el-icon><Coin /></el-icon>
-                    <span>定价规则</span>
+                    <span>Pricing Rules</span>
                 </el-menu-item>
                 <el-menu-item index="/admin/payments">
                     <el-icon><Money /></el-icon>
-                    <span>交易记录</span>
+                    <span>Payments</span>
                 </el-menu-item>
             </el-menu>
             <div class="admin-content">

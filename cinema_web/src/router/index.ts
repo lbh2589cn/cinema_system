@@ -155,20 +155,20 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
     const userStore = useUserStore()
 
-    // 未登录 → 跳登录页
+    // Not logged in → redirect to login page
     if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-        ElMessage.warning('请先登录')
+        ElMessage.warning('Please sign in first')
         next({ name: 'Login', query: { redirect: to.fullPath } })
         return
     }
-    // 已登录 → 登录页 → 跳首页
+    // Logged in → login page → redirect to home
     if (to.name === 'Login' && userStore.isLoggedIn) {
         next({ name: 'MovieList' })
         return
     }
-    // 需要管理员权限
+    // Requires admin permissions
     if (to.matched.some(r => r.meta.role === 'ADMIN')) {
-        // 如果用户信息未加载，先拉取
+        // Fetch user info if not loaded yet
         if (!userStore.userInfo) {
             try {
                 await userStore.fetchUserInfo()
@@ -179,7 +179,7 @@ router.beforeEach(async (to, _from, next) => {
             }
         }
         if (!userStore.isAdmin) {
-            ElMessage.error('权限不足，无法访问')
+            ElMessage.error('Access denied')
             next({ name: 'MovieList' })
             return
         }

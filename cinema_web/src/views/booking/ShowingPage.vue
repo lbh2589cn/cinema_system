@@ -2,7 +2,7 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">选择场次</span>
+                <span class="card-title">Select Showings</span>
             </template>
             <div class="date-selector">
                 <el-radio-group v-model="selectedDate">
@@ -12,7 +12,7 @@
                 </el-radio-group>
             </div>
             <div class="showings-list" v-loading="loading">
-                <el-empty v-if="showings.length === 0" description="暂无放映场次" />
+                <el-empty v-if="showings.length === 0" description="No showings available" />
                 <el-card
                     v-for="showing in showings"
                     :key="showing.id"
@@ -22,7 +22,7 @@
                 >
                     <div class="showing-time">{{ showing.showTime }}</div>
                     <div class="showing-info">
-                        <span>影厅 #{{ showing.hallId }}</span>
+                        <span>Hall #{{ showing.hallId }}</span>
                         <span class="price">¥{{ showing.basePrice }}</span>
                     </div>
                 </el-card>
@@ -58,10 +58,10 @@ const dateOptions = computed(() => {
 function formatDateLabel(dateStr: string, index: number) {
     const today = new Date().toISOString().split('T')[0]
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-    if (dateStr === today) return '今天'
-    if (dateStr === tomorrow) return '明天'
+    if (dateStr === today) return 'Today'
+    if (dateStr === tomorrow) return 'Tomorrow'
     const d = new Date(dateStr)
-    return `${d.getMonth() + 1}/${d.getDate()}`
+    return `${d.getDate()}/${d.getMonth() + 1}`
 }
 
 const showings = computed(() =>

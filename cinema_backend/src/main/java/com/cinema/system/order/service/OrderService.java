@@ -53,35 +53,35 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(OrderCreateRequest request, Long userId) {
-        // 1. 验证座位状态并计算座位总价
+        // 1. Verify seat status and calculate seat total
         List<SeatBooking> seatBookings = seatBookingRepository
                 .findByIdsWithLock(request.getSeatBookingIds());
 
         for (SeatBooking booking : seatBookings) {
             if (!"LOCKED".equals(booking.getStatus())) {
-                throw new BusinessException("座位 " + booking.getSeatId() + " 状态异常");
+                throw new BusinessException("Seat " + booking.getSeatId() + " status error");
             }
             if (!userId.equals(booking.getLockedBy())) {
-                throw new BusinessException("座位 " + booking.getSeatId() + " 不是您锁定的");
+                throw new BusinessException("Seat " + booking.getSeatId() + " not locked by you");
             }
         }
         Showing showing = showingRepository.findById(request.getShowingId())
-                .orElseThrow(() -> new BusinessException("排片不存在"));
+                .orElseThrow(() -> new BusinessException("Showing not found"));
         LocalDateTime showDateTime = showing.getShowDate().atTime(showing.getShowTime());
         if (LocalDateTime.now().isAfter(showDateTime) || LocalDateTime.now().isEqual(showDateTime)) {
-            throw new BusinessException("电影已开始放映，无法购票");
+            throw new BusinessException("Movie has already started, cannot purchase");
         }
         BigDecimal seatTotal = showing.getBasePrice().multiply(BigDecimal.valueOf(seatBookings.size()));
 
-        // 2. 计算零食总价
+        // 2. Calculate snack total
         BigDecimal snackTotal = BigDecimal.ZERO;
         List<OrderItem> snackItems = new ArrayList<>();
         if (request.getSnackItems() != null) {
             for (OrderCreateRequest.SnackItem item : request.getSnackItems()) {
                 Snack snack = snackRepository.findById(item.getSnackId())
-                        .orElseThrow(() -> new BusinessException("零食不存在"));
+                        .orElseThrow(() -> new BusinessException("Snack not found"));
                 if (snack.getStock() < item.getQuantity()) {
-                    throw new BusinessException("零食 " + snack.getName() + " 库存不足");
+                    throw new BusinessException("Snack " + snack.getName() + " insufficient stock");
                 }
                 BigDecimal subtotal = snack.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
                 snackTotal = snackTotal.add(subtotal);
@@ -100,13 +100,13 @@ public class OrderService {
             }
         }
 
-        // 3. 计算动态价格
+        // 3. Calculate dynamic pricing
         BigDecimal totalAmount = seatTotal.add(snackTotal);
         var discountResult = pricingRuleService.calculateDiscount(request.getShowingId(), userId, totalAmount, seatBookings.size());
         BigDecimal discountAmount = discountResult.getTotalDiscount().setScale(2, RoundingMode.HALF_UP);
         BigDecimal finalAmount = discountResult.getFinalAmount();
 
-        // 4. 创建订单
+        // 4. Create order
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
@@ -118,7 +118,7 @@ public class OrderService {
         order.setStatus("PENDING");
         order = orderRepository.save(order);
 
-        // 5. 创建支付记录
+        // 5. Create payment record
         Payment payment = new Payment();
         payment.setOrderId(order.getId());
         payment.setAmount(finalAmount);
@@ -127,7 +127,7 @@ public class OrderService {
         payment.setPaymentNo(paymentService.generatePaymentNo());
         paymentRepository.save(payment);
 
-        // 6. 更新座位状态
+        // 6. Update seat status
         for (SeatBooking booking : seatBookings) {
             booking.setStatus("LOCKED");
             booking.setLockedBy(userId);
@@ -136,7 +136,7 @@ public class OrderService {
         }
         seatBookingRepository.saveAll(seatBookings);
 
-        // 7. 创建订单明细
+        // 7. Create order items
         BigDecimal seatPrice = showing.getBasePrice();
         List<Long> hallSeatIds = seatBookings.stream()
                 .map(SeatBooking::getSeatId)
@@ -150,8 +150,8 @@ public class OrderService {
             item.setItemId(seatItem.getId());
             HallSeat hallSeat = hallSeatMap.get(seatItem.getSeatId());
             String seatName = hallSeat != null ? 
-                    "座位 第" + hallSeat.getRowNum() + "排第" + hallSeat.getColNum() + "座" : 
-                    "座位 #" + seatItem.getSeatId();
+                    "Seat Row " + hallSeat.getRowNum() + " Col " + hallSeat.getColNum() : 
+                    "Seat #" + seatItem.getSeatId();
             item.setItemName(seatName);
             item.setQuantity(1);
             item.setUnitPrice(seatPrice);
@@ -174,9 +174,9 @@ public class OrderService {
 
     public OrderDetailResponse getOrderDetail(Long id, Long userId, boolean isAdmin) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("Order not found"));
         if (!isAdmin && !order.getUserId().equals(userId)) {
-            throw new BusinessException("无权查看该订单");
+            throw new BusinessException("No permission to view this order");
         }
         List<OrderItem> items = orderItemRepository.findByOrderId(id);
 
@@ -194,7 +194,7 @@ public class OrderService {
         response.setCreatedAt(order.getCreatedAt());
         response.setItems(items);
 
-        // 获取该订单的所有支付记录
+        // Get all payment records for this order
         List<Payment> payments = paymentRepository.findByOrderId(id);
         List<OrderDetailResponse.PaymentRecord> paymentRecords = payments.stream().map(p -> {
             OrderDetailResponse.PaymentRecord r = new OrderDetailResponse.PaymentRecord();
@@ -215,24 +215,24 @@ public class OrderService {
     @Transactional
     public void refundOrder(Long id, Long userId) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("Order not found"));
         if (!order.getUserId().equals(userId)) {
-            throw new BusinessException("无权退票");
+            throw new BusinessException("No permission to refund");
         }
         if (!"PAID".equals(order.getStatus())) {
-            throw new BusinessException("只有已支付的订单才能退票");
+            throw new BusinessException("Only paid orders can be refunded");
         }
         Showing showing = showingRepository.findById(order.getShowingId())
-                .orElseThrow(() -> new BusinessException("排片不存在"));
+                .orElseThrow(() -> new BusinessException("Showing not found"));
         LocalDateTime showDateTime = showing.getShowDate().atTime(showing.getShowTime());
         if (LocalDateTime.now().isAfter(showDateTime) || LocalDateTime.now().isEqual(showDateTime)) {
-            throw new BusinessException("电影已开始放映，无法退票");
+            throw new BusinessException("Movie has already started, cannot refund");
         }
 
         order.setStatus("REFUNDED");
         orderRepository.save(order);
 
-        // 释放座位
+        // Release seats
         List<SeatBooking> bookings = seatBookingRepository.findByOrderId(id);
         for (SeatBooking booking : bookings) {
             booking.setStatus("AVAILABLE");
@@ -248,9 +248,9 @@ public class OrderService {
     @Transactional
     public void deleteOrder(Long id, Long userId) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("Order not found"));
         if (!order.getUserId().equals(userId)) {
-            throw new BusinessException("无权删除该订单");
+            throw new BusinessException("No permission to delete this order");
         }
 
         order.setVisible(false);

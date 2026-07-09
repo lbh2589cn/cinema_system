@@ -1,22 +1,22 @@
 <template>
     <div class="dashboard" v-loading="loading">
-        <h2 class="page-title">仪表盘</h2>
+        <h2 class="page-title">Dashboard</h2>
         <div class="stats-grid">
             <el-card class="stat-card" @click="$router.push('/admin/users')">
                 <div class="stat-value">{{ stats.totalUsers || 0 }}</div>
-                <div class="stat-label">用户总数</div>
+                <div class="stat-label">Total Users</div>
             </el-card>
             <el-card class="stat-card" @click="$router.push('/admin/movies')">
                 <div class="stat-value">{{ stats.totalMovies || 0 }}</div>
-                <div class="stat-label">电影总数</div>
+                <div class="stat-label">Total Movies</div>
             </el-card>
             <el-card class="stat-card" @click="$router.push('/admin/orders')">
                 <div class="stat-value">{{ stats.totalOrders || 0 }}</div>
-                <div class="stat-label">订单总数</div>
+                <div class="stat-label">Total Orders</div>
             </el-card>
             <el-card class="stat-card" @click="$router.push('/admin/orders')">
                 <div class="stat-value">¥{{ (stats.totalRevenue || 0).toFixed(2) }}</div>
-                <div class="stat-label">总营收</div>
+                <div class="stat-label">Total Revenue</div>
             </el-card>
         </div>
     </div>

@@ -18,12 +18,12 @@ public class AuthController {
     @PostMapping("/register")
     public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
-        return ApiResponse.success("注册成功", null);
+        return ApiResponse.success("Registration successful", null);
     }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
-        return ApiResponse.success("登录成功", response);
+        return ApiResponse.success("Login successful", response);
     }
 }

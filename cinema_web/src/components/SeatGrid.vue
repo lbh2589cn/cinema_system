@@ -1,6 +1,6 @@
 <template>
     <div class="seat-grid-wrapper">
-        <div class="screen-label">银幕</div>
+        <div class="screen-label">SCREEN</div>
         <div class="screen"></div>
         <div class="seat-grid" :style="gridStyle">
             <div
@@ -24,12 +24,12 @@
             </div>
         </div>
         <div class="seat-legend">
-            <div class="legend-item"><span class="legend-dot available"></span>可选</div>
-            <div class="legend-item"><span class="legend-dot selected"></span>已选</div>
-            <div class="legend-item"><span class="legend-dot locked"></span>已锁定</div>
-            <div class="legend-item"><span class="legend-dot booked-dot"></span>已售出</div>
-            <div class="legend-item"><span class="legend-dot vip-restricted-dot"></span>会员专享</div>
-            <div class="legend-item"><span class="legend-dot unavailable-dot"></span>不可用</div>
+            <div class="legend-item"><span class="legend-dot available"></span>Available</div>
+            <div class="legend-item"><span class="legend-dot selected"></span>Selected</div>
+            <div class="legend-item"><span class="legend-dot locked"></span>Locked</div>
+            <div class="legend-item"><span class="legend-dot booked-dot"></span>Sold</div>
+            <div class="legend-item"><span class="legend-dot vip-restricted-dot"></span>VIP Only</div>
+            <div class="legend-item"><span class="legend-dot unavailable-dot"></span>Unavailable</div>
         </div>
     </div>
 </template>
@@ -61,11 +61,11 @@ function isVipRestricted(seat: SeatStatus): boolean {
 
 function handleSeatClick(seat: SeatStatus) {
     if (seat.seatType === 'UNAVAILABLE') {
-        ElMessage.warning('该座位已暂停使用')
+        ElMessage.warning('This seat is unavailable')
         return
     }
     if (isVipRestricted(seat)) {
-        ElMessage.warning('该座位仅限会员选购，请升级为会员')
+        ElMessage.warning('This seat is for VIP members only. Please upgrade your account.')
         return
     }
     if (props.selectedIds.has(seat.id)) {

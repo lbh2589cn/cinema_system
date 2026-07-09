@@ -1,10 +1,10 @@
 package com.cinema.system.common.enums;
 
 public enum PaymentStatusEnum {
-    PENDING("PENDING", "待支付"),
-    SUCCESS("SUCCESS", "支付成功"),
-    FAILED("FAILED", "支付失败"),
-    REFUNDED("REFUNDED", "已退款");
+    PENDING("PENDING", "Pending Payment"),
+    SUCCESS("SUCCESS", "Payment Successful"),
+    FAILED("FAILED", "Payment Failed"),
+    REFUNDED("REFUNDED", "Refunded");
 
     private final String code;
     private final String desc;

@@ -1,31 +1,31 @@
 <template>
     <div class="register-page">
         <el-card class="register-card" shadow="always">
-            <h2 class="title">注册</h2>
+            <h2 class="title">Register</h2>
             <el-form :model="registerForm" :rules="rules" ref="formRef" label-width="0" @keyup.enter="handleRegister">
                 <el-form-item prop="userId">
-                    <el-input v-model="registerForm.userId" placeholder="请输入账号" size="large" prefix-icon="User" />
+                    <el-input v-model="registerForm.userId" placeholder="Please enter Account" size="large" prefix-icon="User" />
                 </el-form-item>
                 <el-form-item prop="username">
-                    <el-input v-model="registerForm.username" placeholder="请输入用户名" size="large" prefix-icon="Edit" />
+                    <el-input v-model="registerForm.username" placeholder="Please enter Username" size="large" prefix-icon="Edit" />
                 </el-form-item>
                 <el-form-item prop="password">
-                    <el-input v-model="registerForm.password" type="password" placeholder="请输入密码（至少6位）" size="large" prefix-icon="Lock" show-password />
+                    <el-input v-model="registerForm.password" type="password" placeholder="Please enter Password (at least 6 characters)" size="large" prefix-icon="Lock" show-password />
                 </el-form-item>
                 <el-form-item prop="confirmPassword">
-                    <el-input v-model="registerForm.confirmPassword" type="password" placeholder="确认密码" size="large" prefix-icon="Lock" show-password />
+                    <el-input v-model="registerForm.confirmPassword" type="password" placeholder="Confirm Password" size="large" prefix-icon="Lock" show-password />
                 </el-form-item>
                 <el-form-item prop="phone">
-                    <el-input v-model="registerForm.phone" placeholder="手机号（选填）" size="large" prefix-icon="Phone" />
+                    <el-input v-model="registerForm.phone" placeholder="Phone Number (optional)" size="large" prefix-icon="Phone" />
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleRegister">
-                        注册
+                        Register
                     </el-button>
                 </el-form-item>
             </el-form>
             <div class="login-link">
-                已有账号？<router-link to="/login">立即登录</router-link>
+                Already have an account? <router-link to="/login">Sign In Now</router-link>
             </div>
         </el-card>
     </div>
@@ -51,21 +51,21 @@ const registerForm = reactive({
 
 const validatePass = (_rule: any, value: string, callback: any) => {
     if (value !== registerForm.password) {
-        callback(new Error('两次输入的密码不一致'))
+        callback(new Error('The passwords entered do not match'))
     } else {
         callback()
     }
 }
 
 const rules = {
-    userId: [{ required: true, message: '请输入账号', trigger: 'blur' }],
-    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+    userId: [{ required: true, message: 'Please enter Account', trigger: 'blur' }],
+    username: [{ required: true, message: 'Please enter Username', trigger: 'blur' }],
     password: [
-        { required: true, message: '请输入密码', trigger: 'blur' },
-        { min: 6, message: '密码至少6位', trigger: 'blur' },
+        { required: true, message: 'Please enter Password', trigger: 'blur' },
+        { min: 6, message: 'Password must be at least 6 characters', trigger: 'blur' },
     ],
     confirmPassword: [
-        { required: true, message: '请确认密码', trigger: 'blur' },
+        { required: true, message: 'Please confirm Password', trigger: 'blur' },
         { validator: validatePass, trigger: 'blur' },
     ],
 }
@@ -81,7 +81,7 @@ async function handleRegister() {
             password: registerForm.password,
             phone: registerForm.phone || undefined,
         })
-        ElMessage.success('注册成功，请登录')
+        ElMessage.success('Registration successful, please sign in')
         router.push('/login')
     } catch {
         // Error handled by interceptor

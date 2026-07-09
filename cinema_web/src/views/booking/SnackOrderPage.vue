@@ -2,7 +2,7 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">选购零食</span>
+                <span class="card-title">Order Snacks</span>
             </template>
             <div class="snack-grid" v-loading="loading">
                 <el-card v-for="snack in snacks" :key="snack.id" class="snack-card" shadow="hover">
@@ -29,10 +29,10 @@
             </div>
             <div class="actions">
                 <span class="selected-total">
-                    已选 {{ totalQuantity }} 件，合计 ¥{{ totalPrice.toFixed(2) }}
+                    {{ totalQuantity }} item(s) selected, Total: ¥{{ totalPrice.toFixed(2) }}
                 </span>
                 <el-button type="primary" size="large" @click="goToConfirm">
-                    {{ hasSelection ? '去结算' : '跳过选购' }}
+                    {{ hasSelection ? 'Checkout' : 'Skip' }}
                 </el-button>
             </div>
         </el-card>

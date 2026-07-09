@@ -8,13 +8,13 @@ import java.util.List;
 
 @Data
 public class HallCreateRequest {
-    @NotBlank(message = "影厅名称不能为空")
+    @NotBlank(message = "Hall name cannot be empty")
     private String name;
 
-    @NotNull(message = "行数不能为空")
+    @NotNull(message = "Row count cannot be empty")
     private Integer rows;
 
-    @NotNull(message = "列数不能为空")
+    @NotNull(message = "Column count cannot be empty")
     private Integer cols;
 
     private String description;

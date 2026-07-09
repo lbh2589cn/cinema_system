@@ -1,6 +1,6 @@
 -- =============================================================
--- 1. 用户
---    密码均为 "123456" 的 BCrypt 哈希
+-- 1. Users
+--    Passwords are BCrypt hash of "123456"
 -- =============================================================
 INSERT INTO `user` (user_id, username, password_hash, phone, role, is_member, `status`)
 VALUES
@@ -12,19 +12,19 @@ VALUES
     ('eve',       'Eve',       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '13800000005', 'USER',  TRUE,  'ACTIVE');
 
 -- =============================================================
--- 2. 影厅
+-- 2. Halls
 -- =============================================================
 INSERT INTO hall (name, `rows`, `cols`, seat_count, description)
 VALUES
-    ('Standard', 8,  12, 96,  '标准厅：8行 × 12列，共96座'),
-    ('IMAX',    15, 20, 300, 'IMAX巨幕厅：15行 × 20列，共300座'),
-    ('VIP',      4,  5,  20,  'VIP厅：4行 × 5列，共20座，真皮沙发可躺平');
+    ('Standard', 8,  12, 96,  'Standard Hall: 8 rows × 12 cols, 96 seats'),
+    ('IMAX',    15, 20, 300, 'IMAX Hall: 15 rows × 20 cols, 300 seats'),
+    ('VIP',      4,  5,  20,  'VIP Hall: 4 rows × 5 cols, 20 seats, leather recliners');
 
 -- =============================================================
--- 3. 座位布局（根据影厅自动生成）
+-- 3. Seat layout (auto-generated per hall)
 -- =============================================================
 
--- Standard 厅：8行×12列
+-- Standard hall: 8 rows x 12 cols
 INSERT INTO hall_seat (hall_id, row_num, col_num, status)
 WITH RECURSIVE rows_gen(n) AS (
     SELECT 1 UNION ALL SELECT n + 1 FROM rows_gen WHERE n < 8
@@ -35,7 +35,7 @@ cols_gen(n) AS (
 SELECT 1, r.n, c.n, 'STANDARD'
 FROM rows_gen r, cols_gen c;
 
--- IMAX 厅：15行×20列，中间区域设为 VIP 座（第6-10行, 第7-14列）
+-- IMAX hall: 15 rows x 20 cols, centre area set to VIP (rows 6-10, cols 7-14)
 INSERT INTO hall_seat (hall_id, row_num, col_num, status)
 WITH RECURSIVE rows_gen(n) AS (
     SELECT 1 UNION ALL SELECT n + 1 FROM rows_gen WHERE n < 15
@@ -47,7 +47,7 @@ SELECT 2, r.n, c.n,
     CASE WHEN r.n BETWEEN 6 AND 10 AND c.n BETWEEN 7 AND 14 THEN 'VIP' ELSE 'STANDARD' END
 FROM rows_gen r, cols_gen c;
 
--- VIP 厅：4行×5列，全部 VIP
+-- VIP hall: 4 rows x 5 cols, all VIP
 INSERT INTO hall_seat (hall_id, row_num, col_num, status)
 WITH RECURSIVE rows_gen(n) AS (
     SELECT 1 UNION ALL SELECT n + 1 FROM rows_gen WHERE n < 4
@@ -59,7 +59,7 @@ SELECT 3, r.n, c.n, 'VIP'
 FROM rows_gen r, cols_gen c;
 
 -- =============================================================
--- 4. 电影
+-- 4. Movies
 -- =============================================================
 INSERT INTO movie (title, poster_url, description, duration, rating, genre, release_date, `status`)
 VALUES
@@ -124,8 +124,8 @@ VALUES
      '2026-05-01', 'ON');
 
 -- =============================================================
--- 5. 排片
---    覆盖不同时间段和不同影厅
+-- 5. Showings
+--    Covers different time slots and halls
 -- =============================================================
 INSERT INTO showing (movie_id, hall_id, show_date, show_time, base_price, `status`)
 WITH RECURSIVE dates(d) AS (
@@ -140,39 +140,39 @@ time_slots AS (
 )
 SELECT
     m.id,
-    -- 轮换影厅: 根据 (movie_id + day_offset + slot) 计算
+    -- Rotate halls based on (movie_id + day_offset + slot)
     ((m.id + DATEDIFF(d.d, '2026-07-15') + ts.slot_idx - 1) % 3) + 1,
     d.d,
     ts.t,
-    -- 票价：基础价 + 电影系数 + 时段加价
+    -- Ticket price: base + movie coefficient + time surcharge
     15.0 + (m.id * 2.5)
-        + CASE WHEN ts.slot_idx IN (4, 5) THEN 8.0 ELSE 0 END      -- 黄金时段加价
-        + CASE WHEN ts.slot_idx = 1 THEN -3.0 ELSE 0 END,           -- 早场优惠
+        + CASE WHEN ts.slot_idx IN (4, 5) THEN 8.0 ELSE 0 END      -- Peak hours surcharge
+        + CASE WHEN ts.slot_idx = 1 THEN -3.0 ELSE 0 END,           -- Early bird discount
     'SCHEDULED'
 FROM movie m, dates d, time_slots ts
--- 每部电影每天最多 3 个时段（而不是全部5个），避免数据过多
+-- Each movie gets at most 3 time slots per day to avoid too much data
 WHERE ts.slot_idx <= 3 + ((m.id + DATEDIFF(d.d, '2026-07-15')) % 3);
 
 -- =============================================================
--- 6. 为每场放映生成座位预订记录
---    这是核心数据：每个场次的每个座位一条记录
+-- 6. Generate seat booking records for each showing
+--    Core data: one record per seat per showing
 -- =============================================================
 INSERT INTO seat_booking (showing_id, seat_id, `status`, version)
 SELECT s.id, hs.id, 'AVAILABLE', 0
 FROM showing s
 JOIN hall_seat hs ON hs.hall_id = s.hall_id;
 
--- 将一部分场次的座位标记为 BOOKED（模拟已售出）
--- 影响 20% 的座位，使统计数据和仪表盘有内容可展示
+-- Mark some seats as BOOKED (simulating sold)
+-- Affects 20% of seats so dashboards have data to display
 UPDATE seat_booking sb
 JOIN showing s ON s.id = sb.showing_id
 SET sb.status = 'BOOKED',
-    sb.booked_by = FLOOR(1 + RAND() * 5),          -- 随机分配用户 1-5
+    sb.booked_by = FLOOR(1 + RAND() * 5),          -- Random user 1-5
     sb.booked_at = DATE_ADD(s.show_date, INTERVAL -1 DAY),
-    sb.order_id = s.id  -- 临时用 showing_id 占位
-WHERE sb.id % 5 = 0;   -- 每 5 个选 1 个
+    sb.order_id = s.id  -- Temp placeholder using showing_id
+WHERE sb.id % 5 = 0;   -- Every 5th seat
 
--- 将部分场次标记少量 LOCKED（模拟锁定中，15分钟超时）
+-- Mark some seats as LOCKED (simulating in-progress locks, 15 min timeout)
 UPDATE seat_booking sb
 JOIN showing s ON s.id = sb.showing_id
 SET sb.status = 'LOCKED',
@@ -184,27 +184,27 @@ WHERE s.show_date = '2026-07-18'
   AND sb.id % 7 = 0;
 
 -- =============================================================
--- 7. 订单 + 明细 + 支付
+-- 7. Orders + Items + Payments
 -- =============================================================
 
--- 7a. 订单主表
+-- 7a. Orders master
 INSERT INTO `order` (order_no, user_id, showing_id, seat_count, total_amount, discount_amount, final_amount, `status`, remark, created_at)
 VALUES
     ('20260715000001', 2, 1,  2,  96.00,  19.20,  76.80,  'PAID',  NULL,    '2026-07-14 14:30:00'),
     ('20260715000002', 3, 3,  3,  144.00, 0,       144.00, 'PAID',  NULL,    '2026-07-14 15:00:00'),
     ('20260716000003', 4, 12, 1,  65.00,  13.00,  52.00,  'PAID',  NULL,    '2026-07-15 10:15:00'),
     ('20260717000004', 5, 25, 4,  320.00, 0,       320.00, 'PAID',  NULL,    '2026-07-16 20:00:00'),
-    ('20260718000005', 2, 35, 2,  88.00,  17.60,  70.40,  'REFUNDED', '临时有事取消', '2026-07-17 09:00:00');
+    ('20260718000005', 2, 35, 2,  88.00,  17.60,  70.40,  'REFUNDED', 'Cancelled due to personal reasons', '2026-07-17 09:00:00');
 
--- 7b. 更新 seat_booking 关联到真实订单
--- 找到已售座位且没有 order_id 的记录，关联到对应订单
+-- 7b. Update seat_booking to link to real orders
+-- Find booked seats without order_id and link to matching orders
 UPDATE seat_booking sb
 JOIN `order` o ON o.showing_id = sb.showing_id
 SET sb.order_id = o.id
 WHERE sb.status = 'BOOKED' AND sb.order_id IS NULL
   AND sb.booked_by = o.user_id;
 
--- 订单 5（REFUNDED）对应的座位释放回 AVAILABLE
+-- Release seats for order 5 (REFUNDED) back to AVAILABLE
 UPDATE seat_booking sb
 SET sb.status = 'AVAILABLE',
     sb.booked_by = NULL,
@@ -212,9 +212,9 @@ SET sb.status = 'AVAILABLE',
     sb.order_id = NULL
 WHERE sb.order_id = 5;
 
--- 7c. 订单明细（座位项）
+-- 7c. Order items (seats)
 INSERT INTO order_item (order_id, item_type, item_id, item_name, quantity, unit_price, subtotal)
-SELECT o.id, 'SEAT', sb.id, CONCAT('座位 ', hs.row_num, '-', hs.col_num), 1,
+SELECT o.id, 'SEAT', sb.id, CONCAT('Seat ', hs.row_num, '-', hs.col_num), 1,
        (o.total_amount / o.seat_count),
        (o.total_amount / o.seat_count)
 FROM `order` o
@@ -222,7 +222,7 @@ JOIN seat_booking sb ON sb.order_id = o.id
 JOIN hall_seat hs ON hs.id = sb.seat_id
 WHERE o.status = 'PAID';
 
--- 7d. 订单明细（零食项）- 为部分订单加点零食
+-- 7d. Order items (snacks) - add snacks to some orders
 INSERT INTO order_item (order_id, item_type, item_id, item_name, quantity, unit_price, subtotal)
 VALUES
     (1, 'SNACK', 1, 'Popcorn',   2, 3.00,  6.00),
@@ -231,7 +231,7 @@ VALUES
     (4, 'SNACK', 1, 'Popcorn',   4, 3.00,  12.00),
     (4, 'SNACK', 2, 'Coca-Cola', 4, 2.00,  8.00);
 
--- 7e. 支付记录
+-- 7e. Payment records
 INSERT INTO payment (order_id, payment_no, amount, payment_method, `status`, paid_at, created_at)
 VALUES
     (1, 'PAY202607150001', 76.80,  'WECHAT', 'SUCCESS', '2026-07-14 14:31:00', '2026-07-14 14:30:30'),
@@ -240,7 +240,7 @@ VALUES
     (4, 'PAY202607170004', 320.00, 'ALIPAY', 'SUCCESS', '2026-07-16 20:01:00', '2026-07-16 20:00:30');
 
 -- =============================================================
--- 8. 零食
+-- 8. Snacks
 -- =============================================================
 INSERT INTO snack (name, price, image_url, stock, `status`)
 VALUES
@@ -251,37 +251,37 @@ VALUES
     ('Juice',     3.50, '/uploads/images/snacks/d254f67006be42d5adb06ad944348268.jpeg', 120, 'ON');
 
 -- =============================================================
--- 9. 定价规则
+-- 9. Pricing Rules
 -- =============================================================
 INSERT INTO pricing_rule (rule_name, rule_value, priority, enabled, description,
     condition_member, condition_weekdays, condition_time_start, condition_time_end,
     condition_ticket_min, condition_ticket_max, condition_seat_ratio_min, condition_seat_ratio_max)
 VALUES
-    ('周二半价',             0.50, 1, TRUE,  '每周二所有票价半价',
+    ('Tuesday Half Price',       0.50, 1, TRUE,  'Half price every Tuesday',
         NULL, 'TUESDAY', NULL, NULL, NULL, NULL, NULL, NULL),
-    ('周末折扣 8折',         0.80, 2, TRUE,  '周六周日享受 8 折',
+    ('Weekend 20% Off',          0.80, 2, TRUE,  '20% off on Saturdays and Sundays',
         NULL, 'SATURDAY,SUNDAY', NULL, NULL, NULL, NULL, NULL, NULL),
-    ('会员折扣 8折',         0.80, 3, TRUE,  '会员享受 8 折优惠',
+    ('Member 20% Off',           0.80, 3, TRUE,  'Members enjoy 20% off',
         TRUE, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('低销量折扣 9折',       0.90, 4, TRUE,  '剩余座位超过 70% 时折扣 9 折',
+    ('Low Occupancy 10% Off',    0.90, 4, TRUE,  '10% off when occupancy is below 30%',
         NULL, NULL, NULL, NULL, NULL, NULL, 0.70, NULL),
-    ('黄金时段加价 15%',     1.15, 5, TRUE,  '18:00-22:00 黄金时段加价 15%',
+    ('Peak Hours 15% Surcharge', 1.15, 5, TRUE,  '15% surcharge during peak hours 18:00-22:00',
         NULL, NULL, '18:00:00', '22:00:00', NULL, NULL, NULL, NULL),
-    ('高销量加价 10%',       1.10, 6, TRUE,  '剩余座位少于 30% 时加价 10%',
+    ('High Occupancy 10% Surcharge', 1.10, 6, TRUE,  '10% surcharge when remaining seats are below 30%',
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.30);
 
 -- =============================================================
--- 10. 汇总信息输出（控制台）
+-- 10. Summary output (console)
 -- =============================================================
-SELECT '种子数据加载完成!' AS message;
-SELECT CONCAT('用户: ', COUNT(*)) AS info FROM `user`;
-SELECT CONCAT('电影: ', COUNT(*)) AS info FROM movie;
-SELECT CONCAT('影厅: ', COUNT(*), ' (共 ', SUM(seat_count), ' 座)') AS info FROM hall;
-SELECT CONCAT('座位: ', COUNT(*)) AS info FROM hall_seat;
-SELECT CONCAT('排片: ', COUNT(*)) AS info FROM showing;
-SELECT CONCAT('座位预订: ', COUNT(*), ' (可售:', SUM(CASE WHEN `status`='AVAILABLE' THEN 1 ELSE 0 END),
-    ', 已锁定:', SUM(CASE WHEN `status`='LOCKED' THEN 1 ELSE 0 END),
-    ', 已售出:', SUM(CASE WHEN `status`='BOOKED' THEN 1 ELSE 0 END), ')') AS info FROM seat_booking;
-SELECT CONCAT('订单: ', COUNT(*)) AS info FROM `order`;
-SELECT CONCAT('零食: ', COUNT(*)) AS info FROM snack;
-SELECT CONCAT('定价规则: ', COUNT(*)) AS info FROM pricing_rule;
+SELECT 'Seed data loaded successfully!' AS message;
+SELECT CONCAT('Users: ', COUNT(*)) AS info FROM `user`;
+SELECT CONCAT('Movies: ', COUNT(*)) AS info FROM movie;
+SELECT CONCAT('Halls: ', COUNT(*), ' (', SUM(seat_count), ' seats total)') AS info FROM hall;
+SELECT CONCAT('Seats: ', COUNT(*)) AS info FROM hall_seat;
+SELECT CONCAT('Showings: ', COUNT(*)) AS info FROM showing;
+SELECT CONCAT('Seat Bookings: ', COUNT(*), ' (Available:', SUM(CASE WHEN `status`='AVAILABLE' THEN 1 ELSE 0 END),
+    ', Locked:', SUM(CASE WHEN `status`='LOCKED' THEN 1 ELSE 0 END),
+    ', Booked:', SUM(CASE WHEN `status`='BOOKED' THEN 1 ELSE 0 END), ')') AS info FROM seat_booking;
+SELECT CONCAT('Orders: ', COUNT(*)) AS info FROM `order`;
+SELECT CONCAT('Snacks: ', COUNT(*)) AS info FROM snack;
+SELECT CONCAT('Pricing Rules: ', COUNT(*)) AS info FROM pricing_rule;

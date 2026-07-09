@@ -1,7 +1,7 @@
 <template>
     <div class="price-summary">
         <div class="summary-row" v-if="totalAmount > 0">
-            <span>原价</span>
+            <span>Original Price</span>
             <span class="amount">¥{{ totalAmount.toFixed(2) }}</span>
         </div>
         <div class="breakdown" v-if="items && items.length > 0">
@@ -14,7 +14,7 @@
         </div>
         <el-divider style="margin: 8px 0" />
         <div class="summary-row final">
-            <span>应付金额</span>
+            <span>Amount Due</span>
             <span class="amount">¥{{ finalAmount.toFixed(2) }}</span>
         </div>
     </div>

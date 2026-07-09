@@ -8,18 +8,18 @@ import java.time.LocalTime;
 
 @Data
 public class ShowingCreateRequest {
-    @NotNull(message = "电影ID不能为空")
+    @NotNull(message = "Movie ID cannot be empty")
     private Long movieId;
 
-    @NotNull(message = "影厅ID不能为空")
+    @NotNull(message = "Hall ID cannot be empty")
     private Long hallId;
 
-    @NotNull(message = "放映日期不能为空")
+    @NotNull(message = "Show date cannot be empty")
     private LocalDate showDate;
 
-    @NotNull(message = "放映时间不能为空")
+    @NotNull(message = "Show time cannot be empty")
     private LocalTime showTime;
 
-    @NotNull(message = "基础票价不能为空")
+    @NotNull(message = "Base price cannot be empty")
     private BigDecimal basePrice;
 }

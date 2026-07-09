@@ -2,21 +2,21 @@
     <div class="page-container">
         <div class="page-card">
             <div class="filters">
-                <el-input v-model="keyword" placeholder="搜索电影名称" clearable style="width: 300px" @clear="search" @keyup.enter="search">
+                <el-input v-model="keyword" placeholder="Search movie title" clearable style="width: 300px" @clear="search" @input="onKeywordInput">
                     <template #prefix><el-icon><Search /></el-icon></template>
                 </el-input>
-                <el-select v-model="genre" placeholder="类型筛选" clearable style="width: 150px" @change="search">
-                    <el-option label="科幻" value="Sci-Fi" />
-                    <el-option label="动作" value="Action" />
-                    <el-option label="冒险" value="Adventure" />
-                    <el-option label="动画" value="Animation" />
-                    <el-option label="剧情" value="Drama" />
-                    <el-option label="奇幻" value="Fantasy" />
-                    <el-option label="喜剧" value="Comedy" />
+                <el-select v-model="genre" placeholder="Filter by Genre" clearable style="width: 150px" @change="search">
+                    <el-option label="Sci-Fi" value="Sci-Fi" />
+                    <el-option label="Action" value="Action" />
+                    <el-option label="Adventure" value="Adventure" />
+                    <el-option label="Animation" value="Animation" />
+                    <el-option label="Drama" value="Drama" />
+                    <el-option label="Fantasy" value="Fantasy" />
+                    <el-option label="Comedy" value="Comedy" />
                 </el-select>
                 <el-select v-model="sortBy" style="width: 200px" @change="search">
-                    <el-option label="上映时间（新→旧）" value="releaseDate_desc" />
-                    <el-option label="评分（高→低）" value="rating_desc" />
+                    <el-option label="Release Date (New→Old)" value="releaseDate_desc" />
+                    <el-option label="Rating (High→Low)" value="rating_desc" />
                 </el-select>
             </div>
             <div class="movie-grid" v-loading="loading">
@@ -71,6 +71,14 @@ async function loadMovies() {
 function search() {
     page.value = 1
     loadMovies()
+}
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+function onKeywordInput() {
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+        search()
+    }, 300)
 }
 
 onMounted(loadMovies)

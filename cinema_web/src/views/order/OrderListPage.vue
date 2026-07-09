@@ -2,29 +2,31 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">我的订单</span>
+                <span class="card-title">My Orders</span>
             </template>
             <el-table :data="orders" v-loading="loading" style="width: 100%" @row-click="goToDetail">
-                <el-table-column prop="orderNo" label="订单号" min-width="150" align="center" />
-                <el-table-column prop="seatCount" label="座位数" width="80" align="center" />
-                <el-table-column prop="totalAmount" label="总价" width="90" align="center">
+                <el-table-column prop="orderNo" label="Order No." min-width="150" align="center" />
+                <el-table-column prop="seatCount" label="Seats" width="80" align="center" />
+                <el-table-column prop="totalAmount" label="Total" width="90" align="center">
                     <template #default="{ row }">¥{{ row.totalAmount.toFixed(2) }}</template>
                 </el-table-column>
-                <el-table-column prop="finalAmount" label="实付" width="90" align="center">
+                <el-table-column prop="finalAmount" label="Amount Paid" width="90" align="center">
                     <template #default="{ row }">¥{{ row.finalAmount.toFixed(2) }}</template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态" width="100" align="center">
+                <el-table-column prop="status" label="Status" width="100" align="center">
                     <template #default="{ row }">
                         <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="createdAt" label="创建时间" min-width="150" align="center" />
-                <el-table-column label="操作" min-width="160" align="center">
+                <el-table-column label="Created At" min-width="150" align="center">
+                    <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+                </el-table-column>
+                <el-table-column label="Actions" min-width="160" align="center">
                     <template #default="{ row }">
                         <div class="action-btns">
-                            <el-button text type="primary" @click.stop="goToDetail(row)">详情</el-button>
-                            <el-button v-if="row.status === 'PAID'" text type="danger" @click.stop="handleRefund(row)">退票</el-button>
-                            <el-button text type="danger" @click.stop="handleDelete(row)">删除</el-button>
+                            <el-button text type="primary" @click.stop="goToDetail(row)">Details</el-button>
+                            <el-button v-if="row.status === 'PAID'" text type="danger" @click.stop="handleRefund(row)">Refund</el-button>
+                            <el-button text type="danger" @click.stop="handleDelete(row)">Delete</el-button>
                         </div>
                     </template>
                 </el-table-column>
@@ -48,6 +50,7 @@ import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { getOrdersApi, refundOrderApi, deleteOrderApi } from '@/api/order'
 import type { Order } from '@/api/order'
+import { formatDate } from '@/composables/useDateFormatter'
 
 const router = useRouter()
 const orders = ref<Order[]>([])
@@ -62,7 +65,7 @@ function statusType(status: string) {
 }
 
 function statusLabel(status: string) {
-    const map: Record<string, string> = { PENDING: '待支付', PAID: '已支付', REFUNDING: '退款中', REFUNDED: '已退款', CANCELLED: '已取消' }
+    const map: Record<string, string> = { PENDING: 'Pending Payment', PAID: 'Paid', REFUNDING: 'Refunding', REFUNDED: 'Refunded', CANCELLED: 'Cancelled' }
     return map[status] || status
 }
 
@@ -72,9 +75,9 @@ function goToDetail(order: Order) {
 
 async function handleRefund(order: Order) {
     try {
-        await ElMessageBox.confirm('确定要退票吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('Are you sure you want to refund?', 'Confirm', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         await refundOrderApi(order.id)
-        ElMessage.success('退票成功')
+        ElMessage.success('Refund successful')
         await loadOrders()
     } catch {
         // cancelled or error
@@ -83,9 +86,9 @@ async function handleRefund(order: Order) {
 
 async function handleDelete(order: Order) {
     try {
-        await ElMessageBox.confirm('确定要删除此订单吗？删除后不可恢复。', '确定删除', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('Are you sure you want to delete this order? This action cannot be undone.', 'Confirm Delete', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         await deleteOrderApi(order.id)
-        ElMessage.success('订单已删除')
+        ElMessage.success('Order deleted')
         await loadOrders()
     } catch {
         // cancelled or error

@@ -16,13 +16,13 @@
                     <span class="rating" v-if="movie.rating > 0">
                         <el-icon><StarFilled /></el-icon> {{ movie.rating }}
                     </span>
-                    <span>{{ movie.duration }} 分钟</span>
+                    <span>{{ movie.duration }} minutes</span>
                     <span>{{ movie.genre }}</span>
                 </div>
                 <p class="description">{{ movie.description }}</p>
                 <div class="actions">
                     <el-button type="primary" size="large" @click="goToBooking">
-                        选择场次购票
+                        Select showing to purchase
                     </el-button>
                 </div>
             </div>

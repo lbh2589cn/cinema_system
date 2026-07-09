@@ -1,22 +1,22 @@
 <template>
     <div class="login-page">
         <el-card class="login-card" shadow="always">
-            <h2 class="title">登录</h2>
+            <h2 class="title">Sign In</h2>
             <el-form :model="loginForm" :rules="rules" ref="formRef" label-width="0" @keyup.enter="handleLogin">
                 <el-form-item prop="userId">
-                    <el-input v-model="loginForm.userId" placeholder="请输入用户ID" size="large" prefix-icon="User" />
+                    <el-input v-model="loginForm.userId" placeholder="Please enter User ID" size="large" prefix-icon="User" />
                 </el-form-item>
                 <el-form-item prop="password">
-                    <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" size="large" prefix-icon="Lock" show-password />
+                    <el-input v-model="loginForm.password" type="password" placeholder="Please enter Password" size="large" prefix-icon="Lock" show-password />
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleLogin">
-                        登录
+                        Sign In
                     </el-button>
                 </el-form-item>
             </el-form>
             <div class="register-link">
-                还没有账号？<router-link to="/register">立即注册</router-link>
+                No account yet? <router-link to="/register">Sign Up Now</router-link>
             </div>
         </el-card>
     </div>
@@ -40,8 +40,8 @@ const loginForm = reactive({
 })
 
 const rules = {
-    userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
-    password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+    userId: [{ required: true, message: 'Please enter User ID', trigger: 'blur' }],
+    password: [{ required: true, message: 'Please enter Password', trigger: 'blur' }],
 }
 
 async function handleLogin() {
@@ -51,7 +51,7 @@ async function handleLogin() {
     try {
         await userStore.login(loginForm)
         await userStore.fetchUserInfo()
-        ElMessage.success('登录成功')
+        ElMessage.success('Sign in successful')
         const redirect = (route.query.redirect as string) || '/movies'
         router.push(redirect)
     } catch {

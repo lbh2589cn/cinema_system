@@ -24,7 +24,7 @@ public class OrderTimeoutScheduler {
     private static final int BATCH_SIZE = 20;
 
     /**
-     * 每10秒执行一次，取消创建超过3分钟仍未支付的订单并释放座位
+     * Execute every 10 seconds, cancel orders unpaid for over 3 minutes and release seats
      */
     @Scheduled(fixedDelay = 10000)
     @Transactional
@@ -43,7 +43,7 @@ public class OrderTimeoutScheduler {
         int paymentCount = paymentRepository.batchFailPayments(orderIds);
         int seatCount = seatBookingRepository.batchReleaseSeatsByOrderIds(orderIds);
 
-        log.info("批量取消 {} 个超时未支付订单，更新 {} 条支付记录为FAILED，释放 {} 个座位",
+        log.info("Batch cancelling {} timed-out unpaid orders, updating {} payment records to FAILED, releasing {} seats",
                 cancelledCount, paymentCount, seatCount);
     }
 }

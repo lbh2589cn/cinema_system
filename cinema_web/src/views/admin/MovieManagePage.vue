@@ -1,27 +1,27 @@
 <template>
     <div>
         <div class="page-header">
-            <h2 class="page-title">电影管理</h2>
-            <el-button type="primary" @click="showDialog = true">新增电影</el-button>
+            <h2 class="page-title">Movie Management</h2>
+            <el-button type="primary" @click="resetForm(); showDialog = true">Add Movie</el-button>
         </div>
 
         <el-card class="page-card">
             <el-table :data="movies" v-loading="loading" style="width: 100%">
-                <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="title" label="电影名称" min-width="180" />
-                <el-table-column prop="duration" label="时长(分钟)" width="100" />
-                <el-table-column prop="rating" label="评分" width="80" />
-                <el-table-column prop="genre" label="类型" width="150" />
-                <el-table-column prop="status" label="状态" width="100">
+                <el-table-column prop="id" label="ID" width="50" />
+                <el-table-column prop="title" label="Title" min-width="100" />
+                <el-table-column prop="duration" label="Duration (mins)" width="130" />
+                <el-table-column prop="rating" label="Rating" width="80" />
+                <el-table-column prop="genre" label="Genre" min-width="200" />
+                <el-table-column prop="status" label="Status" width="100">
                     <template #default="{ row }">
-                        <el-tag :type="row.status === 'ON' ? 'success' : 'info'">{{ row.status === 'ON' ? '上映中' : '已下架' }}</el-tag>
+                        <el-tag :type="row.status === 'ON' ? 'success' : 'info'">{{ row.status === 'ON' ? 'Showing' : 'Removed' }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作" width="250">
+                <el-table-column label="Actions" width="400">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click="editMovie(row)">编辑</el-button>
-                        <el-button text type="danger" @click="handleDelete(row)">{{ row.status === 'ON' ? '下架' : '上架' }}</el-button>
-                        <el-button text type="danger" @click="handleHardDelete(row)">删除</el-button>
+                        <el-button text type="primary" @click="editMovie(row)">Edit</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">{{ row.status === 'ON' ? 'Pull' : 'Show' }}</el-button>
+                        <el-button text type="danger" @click="handleHardDelete(row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -38,50 +38,51 @@
         </div>
 
         <!-- Add/Edit Dialog -->
-        <el-dialog v-model="showDialog" :title="isEdit ? '编辑电影' : '新增电影'" width="600px">
+        <el-dialog v-model="showDialog" :title="isEdit ? 'Edit Movie' : 'Add Movie'" width="600px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-                <el-form-item label="电影名称" prop="title">
+                <el-form-item label="Title" prop="title">
                     <el-input v-model="form.title" />
                 </el-form-item>
-                <el-form-item label="海报">
-                    <el-upload
-                        :auto-upload="false"
-                        :on-change="handleFileChange"
-                        :on-exceed="handleExceed"
-                        :show-file-list="false"
-                        :before-upload="beforeUpload"
-                        accept="image/*"
-                        ref="uploadRef"
-                    >
-                        <el-button type="primary">选择图片</el-button>
-                        <template #tip>
-                            <span class="upload-tip">支持 JPG/PNG，建议尺寸 300×450px</span>
-                        </template>
-                    </el-upload>
-                    <div v-if="previewUrl" class="upload-preview">
-                        <img :src="previewUrl" alt="海报预览" />
-                        <el-button text type="danger" size="small" @click="removeImage">移除</el-button>
+                <el-form-item label="Poster">
+                    <div class="upload-wrapper">
+                        <div class="upload-actions">
+                            <el-upload
+                                :auto-upload="false"
+                                :on-change="handleFileChange"
+                                :on-exceed="handleExceed"
+                                :show-file-list="false"
+                                :before-upload="beforeUpload"
+                                accept="image/*"
+                                ref="uploadRef"
+                            >
+                                <el-button type="primary">Select Image</el-button>
+                            </el-upload>
+                            <el-button v-if="previewUrl" text type="danger" size="small" @click="removeImage">Remove</el-button>
+                        </div>
+                        <div v-if="previewUrl" class="upload-preview">
+                            <img :src="previewUrl" alt="Poster Preview" />
+                        </div>
                     </div>
                 </el-form-item>
-                <el-form-item label="简介" prop="description">
+                <el-form-item label="Synopsis" prop="description">
                     <el-input v-model="form.description" type="textarea" :rows="3" />
                 </el-form-item>
-                <el-form-item label="时长(分钟)" prop="duration">
+                <el-form-item label="Duration" prop="duration">
                     <el-input-number v-model="form.duration" :min="1" />
                 </el-form-item>
-                <el-form-item label="评分" prop="rating">
+                <el-form-item label="Rating" prop="rating">
                     <el-input-number v-model="form.rating" :min="0" :max="10" :step="0.1" />
                 </el-form-item>
-                <el-form-item label="类型" prop="genre">
-                    <el-input v-model="form.genre" placeholder="用逗号分隔，如 Sci-Fi,Action" />
+                <el-form-item label="Genre" prop="genre">
+                    <el-input v-model="form.genre" placeholder="Separated by commas, e.g. Sci-Fi,Action" />
                 </el-form-item>
-                <el-form-item label="上映日期" prop="releaseDate">
-                    <el-date-picker v-model="form.releaseDate" type="date" value-format="YYYY-MM-DD" />
+                <el-form-item label="Release Date" prop="releaseDate">
+                    <el-date-picker v-model="form.releaseDate" type="date" format="DD/MM/YYYY" value-format="YYYY-MM-DD" />
                 </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="showDialog = false">取消</el-button>
-                <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
+                <el-button @click="showDialog = false">Cancel</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">Save</el-button>
             </template>
         </el-dialog>
     </div>
@@ -120,8 +121,8 @@ const form = reactive({
 })
 
 const rules = {
-    title: [{ required: true, message: '请输入电影名称', trigger: 'blur' }],
-    duration: [{ required: true, message: '请输入时长', trigger: 'blur' }],
+    title: [{ required: true, message: 'Please enter movie title', trigger: 'blur' }],
+    duration: [{ required: true, message: 'Please enter duration', trigger: 'blur' }],
 }
 
 async function loadMovies() {
@@ -174,7 +175,7 @@ function resetForm() {
 function handleFileChange(uploadFile: any) {
     const file = uploadFile.raw
     if (!file) return
-    // 释放上一次预览 URL
+    // Release previous preview URL
     if (previewUrl.value && !previewUrl.value.startsWith('http')) {
         URL.revokeObjectURL(previewUrl.value)
     }
@@ -183,7 +184,7 @@ function handleFileChange(uploadFile: any) {
 }
 
 function handleExceed() {
-    ElMessage.warning('只能选择一个文件')
+    ElMessage.warning('Only one file can be selected')
 }
 
 function removeImage() {
@@ -198,13 +199,16 @@ function removeImage() {
 
 function beforeUpload(file: File) {
     const isImage = file.type.startsWith('image/')
-    if (!isImage) {
-        ElMessage.error('只能上传图片文件')
+    // Some browsers may not detect MIME types for certain images; check extension as fallback
+    const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.ico', '.tiff', '.tif']
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+    if (!isImage && !imageExts.includes(ext)) {
+        ElMessage.error('Only image files are supported (JPG/PNG/GIF/WebP/BMP/SVG etc.)')
         return false
     }
-    const isLt5M = file.size / 1024 / 1024 < 5
-    if (!isLt5M) {
-        ElMessage.error('图片大小不能超过 5MB')
+    const isLt10M = file.size / 1024 / 1024 < 10
+    if (!isLt10M) {
+        ElMessage.error('Image size cannot exceed 10MB')
         return false
     }
     return true
@@ -223,17 +227,17 @@ async function handleSave() {
     if (!valid) return
     saving.value = true
     try {
-        // 先上传图片（如果有待上传的文件）
+        // Upload image first if there is a pending file
         if (pendingFile.value) {
             const url = await uploadPendingFile()
             form.posterUrl = url
         }
         if (isEdit.value && editId.value) {
             await updateMovieApi(editId.value, form)
-            ElMessage.success('更新成功')
+            ElMessage.success('Updated successfully')
         } else {
             await createMovieApi(form as any)
-            ElMessage.success('创建成功')
+            ElMessage.success('Created successfully')
         }
         showDialog.value = false
         resetForm()
@@ -244,15 +248,15 @@ async function handleSave() {
 }
 
 async function handleDelete(movie: Movie) {
-    const action = movie.status === 'ON' ? '下架' : '上架'
+    const action = movie.status === 'ON' ? 'pull' : 'show'
     try {
-        await ElMessageBox.confirm(`确定要${action}该电影吗？`, '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm(`Are you sure you want to ${action} this movie?`, 'Confirm', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         if (movie.status === 'ON') {
             await hideMovieApi(movie.id)
         } else {
             await updateMovieApi(movie.id, { status: 'ON' })
         }
-        ElMessage.success(`${action}成功`)
+        ElMessage.success(action === 'pull' ? 'Movie pulled' : 'Movie is now showing')
         await loadMovies()
     } catch {
         // cancelled
@@ -261,9 +265,9 @@ async function handleDelete(movie: Movie) {
 
 async function handleHardDelete(movie: Movie) {
     try {
-        await ElMessageBox.confirm(`确定要删除「${movie.title}」吗？此操作不可恢复！`, '警告', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'error' })
+        await ElMessageBox.confirm(`Are you sure you want to delete "${movie.title}"? This action cannot be undone!`, 'Warning', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'error' })
         await deleteMovieApi(movie.id)
-        ElMessage.success('已删除')
+        ElMessage.success('Deleted successfully')
         await loadMovies()
     } catch {
         // cancelled
@@ -291,12 +295,20 @@ onMounted(loadMovies)
     margin-left: 8px;
 }
 
-.upload-preview {
-    margin-top: 12px;
+.upload-wrapper {
     display: flex;
+    flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+}
 
+.upload-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-preview {
     img {
         max-width: 120px;
         max-height: 160px;

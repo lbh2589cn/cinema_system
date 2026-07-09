@@ -17,7 +17,7 @@
             <h3 class="movie-title">{{ movie.title }}</h3>
             <div class="movie-meta">
                 <span class="genre">{{ movie.genre }}</span>
-                <span class="duration">{{ movie.duration }} 分钟</span>
+                <span class="duration">{{ movie.duration }} mins</span>
             </div>
         </div>
     </el-card>

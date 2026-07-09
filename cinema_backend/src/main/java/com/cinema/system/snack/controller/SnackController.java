@@ -44,6 +44,6 @@ public class SnackController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteSnack(@PathVariable Long id) {
         snackService.deleteSnack(id);
-        return ApiResponse.success("删除成功", null);
+        return ApiResponse.success("Deleted successfully", null);
     }
 }

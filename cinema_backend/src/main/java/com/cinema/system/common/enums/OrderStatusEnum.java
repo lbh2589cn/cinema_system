@@ -1,11 +1,11 @@
 package com.cinema.system.common.enums;
 
 public enum OrderStatusEnum {
-    PENDING("PENDING", "待支付"),
-    PAID("PAID", "已支付"),
-    REFUNDING("REFUNDING", "退款中"),
-    REFUNDED("REFUNDED", "已退款"),
-    CANCELLED("CANCELLED", "已取消");
+    PENDING("PENDING", "Pending Payment"),
+    PAID("PAID", "Paid"),
+    REFUNDING("REFUNDING", "Refunding"),
+    REFUNDED("REFUNDED", "Refunded"),
+    CANCELLED("CANCELLED", "Cancelled");
 
     private final String code;
     private final String desc;

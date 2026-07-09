@@ -114,7 +114,7 @@ public class PricingRuleService {
 
     public PricingRule updateRule(Long id, PricingRuleUpdateRequest request) {
         PricingRule rule = pricingRuleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("定价规则不存在"));
+                .orElseThrow(() -> new BusinessException("Pricing rule not found"));
         if (request.getRuleName() != null) rule.setRuleName(request.getRuleName());
         if (request.getRuleValue() != null) rule.setRuleValue(request.getRuleValue());
         if (request.getPriority() != null) rule.setPriority(request.getPriority());
@@ -155,7 +155,7 @@ public class PricingRuleService {
 
     public void deleteRule(Long id) {
         pricingRuleRepository.deleteById(id);
-        // 重排剩余规则的优先级
+        // Reorder priorities for remaining rules
         List<PricingRule> remaining = pricingRuleRepository.findAllByOrderByPriorityAsc();
         int newPriority = 1;
         for (PricingRule rule : remaining) {

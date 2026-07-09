@@ -27,7 +27,7 @@ public class PaymentService {
     private static final AtomicLong PAYMENT_SEQUENCE = new AtomicLong(0);
 
     /**
-     * 生成全局唯一的支付流水号
+     * Generate a globally unique payment number
      */
     public String generatePaymentNo() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -43,19 +43,19 @@ public class PaymentService {
     @Transactional
     public Payment processPayment(PaymentRequest request, Long userId) {
         Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException("Order not found"));
 
         if (!order.getUserId().equals(userId)) {
-            throw new BusinessException("无权支付该订单");
+            throw new BusinessException("No permission to pay this order");
         }
         if (!"PENDING".equals(order.getStatus())) {
-            throw new BusinessException("订单状态异常");
+            throw new BusinessException("Invalid order status");
         }
 
-        // 查找该订单的待支付记录
+        // Find pending payment records for this order
         List<Payment> pendingPayments = paymentRepository.findByOrderIdAndStatus(request.getOrderId(), "PENDING");
         if (pendingPayments.isEmpty()) {
-            throw new BusinessException("未找到待支付记录");
+            throw new BusinessException("No pending payment record found");
         }
 
         Payment payment = pendingPayments.get(0);
@@ -67,7 +67,7 @@ public class PaymentService {
         order.setStatus("PAID");
         orderRepository.save(order);
 
-        // 将座位从锁定更新为已售出
+        // Update seats from locked to booked
         List<SeatBooking> bookings = seatBookingRepository.findByOrderId(order.getId());
         for (SeatBooking booking : bookings) {
             booking.setStatus("BOOKED");

@@ -30,7 +30,7 @@ public class ShowingService {
 
     public Showing getShowing(Long id) {
         return showingRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("排片不存在"));
+                .orElseThrow(() -> new BusinessException("Showing not found"));
     }
 
     @Transactional
@@ -44,7 +44,7 @@ public class ShowingService {
         showing.setStatus("SCHEDULED");
         showing = showingRepository.save(showing);
 
-        // 为该场次生成座位预订记录
+        // Generate seat booking records for this showing
         List<HallSeat> hallSeats = hallSeatRepository.findByHallId(request.getHallId());
         for (HallSeat hallSeat : hallSeats) {
             SeatBooking booking = new SeatBooking();
@@ -62,11 +62,11 @@ public class ShowingService {
     public void cancelShowing(Long id) {
         Showing showing = getShowing(id);
         if (!"SCHEDULED".equals(showing.getStatus())) {
-            throw new BusinessException("只有待放映状态的场次才能取消");
+            throw new BusinessException("Only scheduled showings can be cancelled");
         }
         LocalDateTime showDateTime = showing.getShowDate().atTime(showing.getShowTime());
         if (LocalDateTime.now().isAfter(showDateTime) || LocalDateTime.now().isEqual(showDateTime)) {
-            throw new BusinessException("场次已开始，无法取消");
+            throw new BusinessException("Showing has already started, cannot cancel");
         }
         showing.setStatus("CANCELLED");
         showingRepository.save(showing);
@@ -97,11 +97,11 @@ public class ShowingService {
     public void restoreShowing(Long id) {
         Showing showing = getShowing(id);
         if (!"CANCELLED".equals(showing.getStatus())) {
-            throw new BusinessException("只有已取消状态的场次才能恢复");
+            throw new BusinessException("Only cancelled showings can be restored");
         }
         LocalDateTime showDateTime = showing.getShowDate().atTime(showing.getShowTime());
         if (LocalDateTime.now().isAfter(showDateTime) || LocalDateTime.now().isEqual(showDateTime)) {
-            throw new BusinessException("场次已开始，无法恢复");
+            throw new BusinessException("Showing has already started, cannot restore");
         }
         showing.setStatus("SCHEDULED");
         showingRepository.save(showing);

@@ -1,36 +1,36 @@
 <template>
     <div>
         <div class="page-header">
-            <h2 class="page-title">定价规则管理</h2>
-            <el-button type="primary" @click="handleAdd">新增规则</el-button>
+            <h2 class="page-title">Pricing Rules</h2>
+            <el-button type="primary" @click="handleAdd">Add Rule</el-button>
         </div>
         <el-card class="page-card">
             <el-table :data="rules" v-loading="loading" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="ruleName" label="规则名称" min-width="150" />
-                <el-table-column prop="ruleValue" label="规则值" width="100">
+                <el-table-column prop="ruleName" label="Rule Name" min-width="150" />
+                <el-table-column prop="ruleValue" label="Rule Value" width="100">
                     <template #default="{ row }">{{ row.ruleValue }}</template>
                 </el-table-column>
-                <el-table-column prop="priority" label="优先级" width="160">
+                <el-table-column prop="priority" label="Priority" width="160">
                     <template #default="{ row }">
                         <el-button text type="primary" size="small" :disabled="isFirst(row)" @click="moveUp(row)">↑</el-button>
                         <span style="margin: 0 8px">{{ row.priority }}</span>
                         <el-button text type="primary" size="small" :disabled="isLast(row)" @click="moveDown(row)">↓</el-button>
                     </template>
                 </el-table-column>
-                <el-table-column prop="enabled" label="启用" width="80">
+                <el-table-column prop="enabled" label="Enabled" width="80">
                     <template #default="{ row }">
                         <el-switch v-model="row.enabled" @change="handleToggle(row)" />
                     </template>
                 </el-table-column>
-                <el-table-column prop="description" label="说明" min-width="200" />
-                <el-table-column label="条件" min-width="250">
+                <el-table-column prop="description" label="Description" min-width="200" />
+                <el-table-column label="Conditions" min-width="250">
                     <template #default="{ row }">{{ formatConditions(row) }}</template>
                 </el-table-column>
-                <el-table-column label="操作" width="160">
+                <el-table-column label="Actions" width="250">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click="handleEdit(row)">编辑</el-button>
-                        <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
+                        <el-button text type="primary" @click="handleEdit(row)">Edit</el-button>
+                        <el-button text type="danger" @click="handleDelete(row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -46,76 +46,76 @@
             />
         </div>
 
-        <el-dialog v-model="showDialog" :title="isEdit ? '编辑定价规则' : '新增定价规则'" width="600px">
+        <el-dialog v-model="showDialog" :title="isEdit ? 'Edit Pricing Rule' : 'Add Pricing Rule'" width="600px">
             <el-form :model="editForm" label-width="120px">
-                <el-form-item label="规则名称">
+                <el-form-item label="Rule Name">
                     <el-input v-model="editForm.ruleName" />
                 </el-form-item>
-                <el-form-item label="规则值">
+                <el-form-item label="Rule Value">
                     <el-input-number v-model="editForm.ruleValue" :step="0.01" :precision="4" />
                 </el-form-item>
-                <el-form-item v-if="isEdit" label="优先级">
+                <el-form-item v-if="isEdit" label="Priority">
                     <el-input-number v-model="editForm.priority" :min="0" />
                 </el-form-item>
-                <el-form-item label="启用">
+                <el-form-item label="Enabled">
                     <el-switch v-model="editForm.enabled" />
                 </el-form-item>
-                <el-form-item label="说明">
+                <el-form-item label="Description">
                     <el-input v-model="editForm.description" type="textarea" />
                 </el-form-item>
 
-                <el-divider content-position="left">条件配置</el-divider>
+                <el-divider content-position="left">Condition Configuration</el-divider>
 
-                <el-form-item label="是否为会员">
-                    <el-select v-model="editForm.conditionMember" placeholder="不限制" style="width: 100%" clearable>
-                        <el-option label="是" :value="true" />
-                        <el-option label="否" :value="false" />
+                <el-form-item label="Is VIP Member">
+                    <el-select v-model="editForm.conditionMember" placeholder="No restriction" style="width: 100%" clearable>
+                        <el-option label="Yes" :value="true" />
+                        <el-option label="No" :value="false" />
                     </el-select>
                 </el-form-item>
 
-                <el-form-item label="星期几">
-                    <el-select v-model="editForm.conditionWeekdays" multiple placeholder="不限制" style="width: 100%">
-                        <el-option label="周一" value="MONDAY" />
-                        <el-option label="周二" value="TUESDAY" />
-                        <el-option label="周三" value="WEDNESDAY" />
-                        <el-option label="周四" value="THURSDAY" />
-                        <el-option label="周五" value="FRIDAY" />
-                        <el-option label="周六" value="SATURDAY" />
-                        <el-option label="周日" value="SUNDAY" />
+                <el-form-item label="Day of Week">
+                    <el-select v-model="editForm.conditionWeekdays" multiple placeholder="No restriction" style="width: 100%">
+                        <el-option label="Monday" value="MONDAY" />
+                        <el-option label="Tuesday" value="TUESDAY" />
+                        <el-option label="Wednesday" value="WEDNESDAY" />
+                        <el-option label="Thursday" value="THURSDAY" />
+                        <el-option label="Friday" value="FRIDAY" />
+                        <el-option label="Saturday" value="SATURDAY" />
+                        <el-option label="Sunday" value="SUNDAY" />
                     </el-select>
                 </el-form-item>
 
-                <el-form-item label="时间范围">
+                <el-form-item label="Time Range">
                     <div style="display: flex; gap: 10px">
-                        <el-time-picker v-model="editForm.conditionTimeStart" value-format="HH:mm" format="HH:mm" placeholder="开始" />
+                        <el-time-picker v-model="editForm.conditionTimeStart" value-format="HH:mm" format="HH:mm" placeholder="Start" />
                         <span>-</span>
-                        <el-time-picker v-model="editForm.conditionTimeEnd" value-format="HH:mm" format="HH:mm" placeholder="结束" />
+                        <el-time-picker v-model="editForm.conditionTimeEnd" value-format="HH:mm" format="HH:mm" placeholder="End" />
                     </div>
                 </el-form-item>
 
-                <el-form-item label="购买票数">
+                <el-form-item label="Ticket Quantity">
                     <div style="display: flex; gap: 10px; align-items: center">
                         <span>≥</span>
                         <el-input-number v-model="editForm.conditionTicketMin" :min="0" :precision="0" />
-                        <span style="margin: 0 10px">且</span>
+                        <span style="margin: 0 10px">and</span>
                         <span>≤</span>
                         <el-input-number v-model="editForm.conditionTicketMax" :min="0" :precision="0" />
                     </div>
                 </el-form-item>
 
-                <el-form-item label="剩余座位比例">
+                <el-form-item label="Remaining Seat Ratio">
                     <div style="display: flex; gap: 10px; align-items: center">
                         <span>≥</span>
                         <el-input-number v-model="editForm.conditionSeatRatioMin" :min="0" :max="1" :step="0.05" :precision="2" />
-                        <span style="margin: 0 10px">且</span>
+                        <span style="margin: 0 10px">and</span>
                         <span>≤</span>
                         <el-input-number v-model="editForm.conditionSeatRatioMax" :min="0" :max="1" :step="0.05" :precision="2" />
                     </div>
                 </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="showDialog = false">取消</el-button>
-                <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
+                <el-button @click="showDialog = false">Cancel</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">Save</el-button>
             </template>
         </el-dialog>
     </div>
@@ -156,23 +156,23 @@ const editForm = reactive({
 })
 
 const weekdayMap: Record<string, string> = {
-    MONDAY: '周一',
-    TUESDAY: '周二',
-    WEDNESDAY: '周三',
-    THURSDAY: '周四',
-    FRIDAY: '周五',
-    SATURDAY: '周六',
-    SUNDAY: '周日',
+    MONDAY: 'Monday',
+    TUESDAY: 'Tuesday',
+    WEDNESDAY: 'Wednesday',
+    THURSDAY: 'Thursday',
+    FRIDAY: 'Friday',
+    SATURDAY: 'Saturday',
+    SUNDAY: 'Sunday',
 }
 
 function formatConditions(row: PricingRule): string {
     const parts: string[] = []
     if (row.conditionMember !== null) {
-        parts.push(row.conditionMember ? '会员' : '非会员')
+        parts.push(row.conditionMember ? 'VIP' : 'Non-VIP')
     }
     if (row.conditionWeekdays) {
         const weekdays = (Array.isArray(row.conditionWeekdays) ? row.conditionWeekdays : row.conditionWeekdays.split(',')).map(d => weekdayMap[d] || d)
-        parts.push(weekdays.join('、'))
+        parts.push(weekdays.join(', '))
     }
     if (row.conditionTimeStart || row.conditionTimeEnd) {
         const start = row.conditionTimeStart || '--:--'
@@ -182,14 +182,14 @@ function formatConditions(row: PricingRule): string {
     if (row.conditionTicketMin !== null || row.conditionTicketMax !== null) {
         const min = row.conditionTicketMin !== null ? `≥${row.conditionTicketMin}` : ''
         const max = row.conditionTicketMax !== null ? `≤${row.conditionTicketMax}` : ''
-        parts.push(min && max ? `${min}且${max}` : min || max)
+        parts.push(min && max ? `${min} and ${max}` : min || max)
     }
     if (row.conditionSeatRatioMin !== null || row.conditionSeatRatioMax !== null) {
         const min = row.conditionSeatRatioMin !== null ? `≥${(row.conditionSeatRatioMin * 100).toFixed(0)}%` : ''
         const max = row.conditionSeatRatioMax !== null ? `≤${(row.conditionSeatRatioMax * 100).toFixed(0)}%` : ''
-        parts.push(min && max ? `${min}且${max}` : min || max)
+        parts.push(min && max ? `${min} and ${max}` : min || max)
     }
-    return parts.length > 0 ? parts.join('，') : '无限制'
+    return parts.length > 0 ? parts.join(', ') : 'No restrictions'
 }
 
 async function loadRules() {
@@ -251,7 +251,7 @@ async function handleSave() {
         if (isEdit.value && editId.value) {
             const updateData = { ...editForm, conditionWeekdays: editForm.conditionWeekdays?.join(',') || null }
             await updatePricingRuleApi(editId.value, updateData)
-            ElMessage.success('更新成功')
+            ElMessage.success('Update successful')
         } else {
             await createPricingRuleApi({
                 ruleName: editForm.ruleName,
@@ -267,7 +267,7 @@ async function handleSave() {
                 conditionSeatRatioMin: editForm.conditionSeatRatioMin,
                 conditionSeatRatioMax: editForm.conditionSeatRatioMax,
             })
-            ElMessage.success('创建成功')
+            ElMessage.success('Created successfully')
         }
         showDialog.value = false
         await loadRules()
@@ -279,7 +279,7 @@ async function handleSave() {
 async function handleToggle(rule: PricingRule) {
     try {
         await updatePricingRuleApi(rule.id, { enabled: rule.enabled })
-        ElMessage.success('更新成功')
+        ElMessage.success('Update successful')
     } catch {
         rule.enabled = !rule.enabled
     }
@@ -287,9 +287,9 @@ async function handleToggle(rule: PricingRule) {
 
 async function handleDelete(rule: PricingRule) {
     try {
-        await ElMessageBox.confirm('确定要删除该规则吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+        await ElMessageBox.confirm('Are you sure you want to delete this rule?', 'Notice', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'warning' })
         await deletePricingRuleApi(rule.id)
-        ElMessage.success('删除成功')
+        ElMessage.success('Deleted successfully')
         await loadRules()
     } catch {
         // cancelled
@@ -313,9 +313,9 @@ async function moveUp(rule: PricingRule) {
         await updatePricingRuleApi(rule.id, { priority: prevRule.priority })
         await updatePricingRuleApi(prevRule.id, { priority: tempPriority })
         await loadRules()
-        ElMessage.success('排序已更新')
+        ElMessage.success('Order updated')
     } catch {
-        ElMessage.error('排序更新失败')
+        ElMessage.error('Failed to update order')
     }
 }
 
@@ -328,9 +328,9 @@ async function moveDown(rule: PricingRule) {
         await updatePricingRuleApi(rule.id, { priority: nextRule.priority })
         await updatePricingRuleApi(nextRule.id, { priority: tempPriority })
         await loadRules()
-        ElMessage.success('排序已更新')
+        ElMessage.success('Order updated')
     } catch {
-        ElMessage.error('排序更新失败')
+        ElMessage.error('Failed to update order')
     }
 }
 

@@ -7,20 +7,20 @@ import java.util.List;
 
 @Data
 public class OrderCreateRequest {
-    @NotNull(message = "排片ID不能为空")
+    @NotNull(message = "Showing ID cannot be empty")
     private Long showingId;
 
-    @NotEmpty(message = "座位预订ID列表不能为空")
+    @NotEmpty(message = "Seat booking IDs cannot be empty")
     private List<Long> seatBookingIds;
 
     private List<SnackItem> snackItems;
 
     @Data
     public static class SnackItem {
-        @NotNull(message = "零食ID不能为空")
+        @NotNull(message = "Snack ID cannot be empty")
         private Long snackId;
 
-        @NotNull(message = "零食数量不能为空")
+        @NotNull(message = "Snack quantity cannot be empty")
         private Integer quantity;
     }
 }

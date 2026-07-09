@@ -1,28 +1,28 @@
 <template>
     <div>
         <div class="page-header">
-            <h2 class="page-title">小食管理</h2>
-            <el-button type="primary" @click="showDialog = true">新增小食</el-button>
+            <h2 class="page-title">Snack Management</h2>
+            <el-button type="primary" @click="resetForm(); showDialog = true">Add Snack</el-button>
         </div>
 
         <el-card class="page-card">
             <el-table :data="snacks" v-loading="loading" style="width: 100%">
                 <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="name" label="名称" min-width="150" />
-                <el-table-column prop="price" label="价格" width="100">
+                <el-table-column prop="name" label="Name" min-width="100" />
+                <el-table-column prop="price" label="Unit Price" width="100">
                     <template #default="{ row }">¥{{ row.price }}</template>
                 </el-table-column>
-                <el-table-column prop="stock" label="库存" width="80" />
-                <el-table-column prop="status" label="状态" width="100">
+                <el-table-column prop="stock" label="Stock" width="80" />
+                <el-table-column prop="status" label="Status" width="100">
                     <template #default="{ row }">
-                        <el-tag :type="row.status === 'ON' ? 'success' : 'info'">{{ row.status === 'ON' ? '在售' : '下架' }}</el-tag>
+                        <el-tag :type="row.status === 'ON' ? 'success' : 'info'">{{ row.status === 'ON' ? 'Active' : 'Offline' }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作" width="250">
+                <el-table-column label="Actions" width="400">
                     <template #default="{ row }">
-                        <el-button text type="primary" @click="editSnack(row)">编辑</el-button>
-                        <el-button text type="danger" @click="toggleStatus(row)">{{ row.status === 'ON' ? '下架' : '上架' }}</el-button>
-                        <el-button text type="danger" @click="handleHardDelete(row)">删除</el-button>
+                        <el-button text type="primary" @click="editSnack(row)">Edit</el-button>
+                        <el-button text type="danger" @click="toggleStatus(row)">{{ row.status === 'ON' ? 'Deactivate' : 'Activate' }}</el-button>
+                        <el-button text type="danger" @click="handleHardDelete(row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -39,12 +39,12 @@
         </div>
 
         <!-- Add/Edit Dialog -->
-        <el-dialog v-model="showDialog" :title="isEdit ? '编辑小食' : '新增小食'" width="500px">
+        <el-dialog v-model="showDialog" :title="isEdit ? 'Edit Snack' : 'Add Snack'" width="500px">
             <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
-                <el-form-item label="小食名称" prop="name">
+                <el-form-item label="Name" prop="name">
                     <el-input v-model="form.name" />
                 </el-form-item>
-                <el-form-item label="图片">
+                <el-form-item label="Image">
                     <el-upload
                         :auto-upload="false"
                         :on-change="handleFileChange"
@@ -54,23 +54,23 @@
                         accept="image/*"
                         ref="uploadRef"
                     >
-                        <el-button type="primary">选择图片</el-button>
+                        <el-button type="primary">Select Image</el-button>
                     </el-upload>
                     <div v-if="previewUrl" class="upload-preview">
-                        <img :src="previewUrl" alt="预览" />
-                        <el-button text type="danger" size="small" @click="removeImage">移除</el-button>
+                        <img :src="previewUrl" alt="Preview" />
+                        <el-button text type="danger" size="small" @click="removeImage">Remove</el-button>
                     </div>
                 </el-form-item>
-                <el-form-item label="价格" prop="price">
+                <el-form-item label="Unit Price" prop="price">
                     <el-input-number v-model="form.price" :min="0" :precision="2" :step="1" />
                 </el-form-item>
-                <el-form-item label="库存" prop="stock">
+                <el-form-item label="Stock" prop="stock">
                     <el-input-number v-model="form.stock" :min="0" />
                 </el-form-item>
             </el-form>
             <template #footer>
-                <el-button @click="showDialog = false">取消</el-button>
-                <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
+                <el-button @click="showDialog = false">Cancel</el-button>
+                <el-button type="primary" @click="handleSave" :loading="saving">Save</el-button>
             </template>
         </el-dialog>
     </div>
@@ -107,9 +107,9 @@ const form = reactive({
 })
 
 const rules = {
-    name: [{ required: true, message: '请输入小食名称', trigger: 'blur' }],
-    price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-    stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
+    name: [{ required: true, message: 'Please enter snack name', trigger: 'blur' }],
+    price: [{ required: true, message: 'Please enter unit price', trigger: 'blur' }],
+    stock: [{ required: true, message: 'Please enter stock quantity', trigger: 'blur' }],
 }
 
 async function loadSnacks() {
@@ -162,7 +162,7 @@ function handleFileChange(uploadFile: any) {
 }
 
 function handleExceed() {
-    ElMessage.warning('只能选择一个文件')
+    ElMessage.warning('Only one file can be selected')
 }
 
 function removeImage() {
@@ -178,12 +178,12 @@ function removeImage() {
 function beforeUpload(file: File) {
     const isImage = file.type.startsWith('image/')
     if (!isImage) {
-        ElMessage.error('只能上传图片文件')
+        ElMessage.error('Only image files can be uploaded')
         return false
     }
     const isLt5M = file.size / 1024 / 1024 < 5
     if (!isLt5M) {
-        ElMessage.error('图片大小不能超过 5MB')
+        ElMessage.error('Image size cannot exceed 5MB')
         return false
     }
     return true
@@ -208,10 +208,10 @@ async function handleSave() {
         }
         if (isEdit.value && editId.value) {
             await updateSnackApi(editId.value, { name: form.name, imageUrl: form.imageUrl, price: form.price, stock: form.stock })
-            ElMessage.success('更新成功')
+            ElMessage.success('Update successful')
         } else {
             await createSnackApi({ name: form.name, imageUrl: form.imageUrl, price: form.price, stock: form.stock })
-            ElMessage.success('创建成功')
+            ElMessage.success('Created successfully')
         }
         showDialog.value = false
         resetForm()
@@ -224,15 +224,15 @@ async function handleSave() {
 async function toggleStatus(snack: Snack) {
     const newStatus = snack.status === 'ON' ? 'OFF' : 'ON'
     await updateSnackApi(snack.id, { status: newStatus })
-    ElMessage.success(newStatus === 'ON' ? '上架成功' : '下架成功')
+    ElMessage.success(newStatus === 'ON' ? 'Activated successfully' : 'Deactivated successfully')
     await loadSnacks()
 }
 
 async function handleHardDelete(snack: Snack) {
     try {
-        await ElMessageBox.confirm(`确定要删除「${snack.name}」吗？此操作不可恢复！`, '警告', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'error' })
+        await ElMessageBox.confirm(`Are you sure you want to permanently delete "${snack.name}"? This action cannot be undone!`, 'Warning', { confirmButtonText: 'Confirm', cancelButtonText: 'Cancel', type: 'error' })
         await deleteSnackApi(snack.id)
-        ElMessage.success('已删除')
+        ElMessage.success('Deleted successfully')
         await loadSnacks()
     } catch {
         // cancelled

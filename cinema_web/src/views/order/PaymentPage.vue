@@ -2,27 +2,27 @@
     <div class="page-container">
         <el-card class="page-card" v-loading="loading">
             <template #header>
-                <span class="card-title">支付</span>
+                <span class="card-title">Payment</span>
             </template>
             <div class="payment-info" v-if="order">
-                <div class="order-no">订单号：{{ order.orderNo }}</div>
-                <div class="amount">应付金额：¥{{ order.finalAmount.toFixed(2) }}</div>
+                <div class="order-no">Order No.: {{ order.orderNo }}</div>
+                <div class="amount">Total Amount: ¥{{ order.finalAmount.toFixed(2) }}</div>
             </div>
             <el-divider />
-            <h3 class="pay-title">— 选择支付方式 —</h3>
+            <h3 class="pay-title">— Select Payment Method —</h3>
             <el-radio-group v-model="paymentMethod" class="payment-methods">
                 <el-radio value="WECHAT" class="payment-method" border>
                     <el-icon><Iphone /></el-icon>
-                    微信支付
+                    WeChat Pay
                 </el-radio>
                 <el-radio value="ALIPAY" class="payment-method" border>
                     <el-icon><Wallet /></el-icon>
-                    支付宝
+                    Alipay
                 </el-radio>
             </el-radio-group>
             <div class="actions">
                 <el-button type="primary" size="large" @click="handlePay" :loading="paying">
-                    确认支付 ¥{{ order?.finalAmount.toFixed(2) }}
+                    Confirm Payment ¥{{ order?.finalAmount.toFixed(2) }}
                 </el-button>
             </div>
         </el-card>
@@ -47,7 +47,7 @@ async function handlePay() {
     paying.value = true
     try {
         await payApi({ orderId: order.value.id, paymentMethod: paymentMethod.value })
-        ElMessage.success('支付成功')
+        ElMessage.success('Payment successful')
         router.push(`/order/success?orderId=${order.value.id}`)
     } catch {
         // Error handled by interceptor

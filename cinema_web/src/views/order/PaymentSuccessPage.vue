@@ -4,11 +4,11 @@
             <div class="success-icon">
                 <el-icon :size="64" color="#67c23a"><CircleCheck /></el-icon>
             </div>
-            <h2>支付成功！</h2>
-            <p class="order-no" v-if="order">订单号：{{ order.orderNo }}</p>
+            <h2>Payment Successful!</h2>
+            <p class="order-no" v-if="order">Order No.: {{ order.orderNo }}</p>
             <div class="actions">
                 <el-button type="primary" @click="router.push(`/orders/${order?.id}`)">
-                    查看订单
+                    View Order
                 </el-button>
             </div>
         </el-card>

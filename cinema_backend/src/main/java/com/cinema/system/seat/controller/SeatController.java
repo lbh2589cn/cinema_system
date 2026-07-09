@@ -27,7 +27,7 @@ public class SeatController {
                                        Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
         seatService.lockSeats(request, userId);
-        return ApiResponse.success("锁定成功", null);
+        return ApiResponse.success("Locked successfully", null);
     }
 
     @PostMapping("/seats/unlock")
@@ -35,6 +35,6 @@ public class SeatController {
                                          Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
         seatService.unlockSeats(request.getShowingId(), request.getSeatIds(), userId);
-        return ApiResponse.success("释放成功", null);
+        return ApiResponse.success("Released successfully", null);
     }
 }

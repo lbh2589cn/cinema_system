@@ -2,14 +2,14 @@
     <div class="page-container">
         <el-card class="page-card">
             <template #header>
-                <span class="card-title">确认订单</span>
+                <span class="card-title">Confirm Order</span>
             </template>
             <el-descriptions :column="1" border>
-                <el-descriptions-item label="电影">{{ movie?.title || '待加载' }}</el-descriptions-item>
-                <el-descriptions-item label="场次">{{ showing ? `影厅 #${showing.hallId} | ${showing.showDate} ${showing.showTime}` : '待加载' }}</el-descriptions-item>
-                <el-descriptions-item label="座位数">{{ appStore.selectedSeats.length }} 个</el-descriptions-item>
-                <el-descriptions-item label="零食">
-                    <div v-if="appStore.selectedSnacks.length === 0">无</div>
+                <el-descriptions-item label="Movie">{{ movie?.title || 'Loading...' }}</el-descriptions-item>
+                <el-descriptions-item label="Show">{{ showing ? `Hall #${showing.hallId} | ${formatDate(showing.showDate)} ${showing.showTime}` : 'Loading...' }}</el-descriptions-item>
+                <el-descriptions-item label="Seats">{{ appStore.selectedSeats.length }}</el-descriptions-item>
+                <el-descriptions-item label="Snacks">
+                    <div v-if="appStore.selectedSnacks.length === 0">None</div>
                     <div v-for="s in appStore.selectedSnacks" :key="s.id">
                         {{ s.name }} × {{ s.quantity }}
                     </div>
@@ -18,7 +18,7 @@
             <PriceSummary :total-amount="totalAmount" :items="discountItems" :final-amount="finalAmount" />
             <div class="actions">
                 <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
-                    提交订单
+                    Submit Order
                 </el-button>
             </div>
         </el-card>
@@ -37,6 +37,7 @@ import { calculatePriceApi } from '@/api/pricing'
 import type { Movie } from '@/api/movie'
 import type { Showing } from '@/api/showing'
 import type { DiscountItem } from '@/api/pricing'
+import { formatDate } from '@/composables/useDateFormatter'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,7 +87,7 @@ async function handleSubmit() {
                 quantity: s.quantity,
             })),
         })
-        ElMessage.success('订单创建成功')
+        ElMessage.success('Order created successfully')
         appStore.resetBooking()
         router.push(`/order/payment?orderId=${order.id}`)
     } catch {

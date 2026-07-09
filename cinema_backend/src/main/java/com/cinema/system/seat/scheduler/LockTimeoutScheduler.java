@@ -17,7 +17,7 @@ public class LockTimeoutScheduler {
     private final SeatBookingRepository seatBookingRepository;
 
     /**
-     * 每10秒执行一次，释放锁定超过3分钟的座位
+     * Execute every 10 seconds, release seats locked for over 3 minutes
      */
     @Scheduled(fixedDelay = 10000)
     @Transactional
@@ -26,7 +26,7 @@ public class LockTimeoutScheduler {
         int released = seatBookingRepository.releaseExpiredLocks(expireTime);
 
         if (released > 0) {
-            log.info("已释放 {} 个超时锁定的座位", released);
+            log.info("Released {} timed-out locked seats", released);
         }
     }
 }
